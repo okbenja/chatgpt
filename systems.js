@@ -16,6 +16,12 @@
     s.life={economy:{savings:0,debt:0,creditLimit:250,lastBilledDay:Math.max(0,s.day-1),transactions:[],weeks:[]},employment:{jobId:s.profile.path==='work'?'nexo':'none',status:s.profile.path==='work'?'employed':'unemployed',performance:60,lastWorkedDay:0,missedShifts:0},skills:Object.fromEntries(defs(g).skills.map(k=>[k.id,{xp:0,lastPracticeDay:0}])),home:{type:'familiar',roommateId:'hermana',upgrades:[],lastMoveDay:0},pet:null,world:{weather:'despejado',news:[],lastUpdatedDay:s.day},annual:{},wellbeing:{nutrition:65,movement:50,rest:75,illness:0},history:[]};
     for(const a of defs(g).aspirations)s.direction.progress[a.id]={stage:0};
     if(input.version>=3){validate(g,input);s.aspirations=clone(input.aspirations);s.direction=clone(input.direction);s.life=clone(input.life);s.life.annual=s.life.annual||{};}
+    const book=input.version===4?input.direction.book:input.book||[];
+    if(!Array.isArray(book)||book.length>12||book.some(x=>!x||typeof x.text!=='string'||x.text.length>1600||typeof x.title!=='string'||typeof x.name!=='string'||!finite(x.day)))throw Error('Libro inválido');
+    s.direction.book=clone(book);
+    const inheritance=input.version===4?input.direction.inheritance:input.inheritance||null;
+    if(inheritance!==null&&(!inheritance||inheritance.kind!=='carta'||typeof inheritance.from!=='string'||typeof inheritance.text!=='string'||inheritance.text.length>1000))throw Error('Herencia inválida');
+    s.direction.inheritance=clone(inheritance);
     hydratePressure(g,s,input);
     s.lifeStage=stage(g,s);
     return s;
@@ -49,8 +55,75 @@
   function metric(g,name){const s=g.state,l=s.life;return name==='savings'?l.economy.savings:name==='skill'?l.skills.creatividad.xp:name==='friend'?Object.values(s.relationships).filter(r=>r.status==='friend'||r.status==='partner').length:name==='family'?Object.values(s.relationships).filter(r=>r.status==='family').reduce((a,r)=>a+r.trust,0)/Object.values(s.relationships).filter(r=>r.status==='family').length:name==='explore'?s.direction.visitedLocations.length:s.counters.study;}
   function goals(g){return g.state.aspirations.flatMap(id=>{const a=defs(g).aspirations.find(a=>a.id===id),stage=g.state.direction.progress[id].stage,t=a.stages[stage];if(!t)return [];const value=metric(g,t.metric);return [{...t,renunciation:defs(g).aspirationTradeoffs[id].text,id:'asp_'+t.id,aspirationId:id,type:t.metric,progress:Math.min(Math.floor(value*10)/10,t.target),complete:value>=t.target,claimed:false}];});}
   function claim(g,id){const goal=goals(g).find(x=>x.id===id);if(!goal||!goal.complete)return fail('Todavía queda un poco para ese paso.');const trade=defs(g).aspirationTradeoffs[goal.aspirationId],check=g._timeCheck(trade.duration,trade.energy);if(check)return check;if(g.state.money<(trade.cost||0))return fail('Necesitas reservar el coste indicado antes de cerrar este tramo.');g._advance(trade.duration);g._effects({...trade.stats,energy:-trade.energy,money:-(trade.cost||0)});g.state.direction.progress[goal.aspirationId].stage++;g._effects({money:goal.reward,mood:3});g._journal('Un rumbo que toma forma',`${goal.title}. Avanzas en tu aspiración de ${goal.aspirationId}.`,'milestone',{tags:['aspiraciones']});return g._success('Has completado un tramo de tu historia.',{kind:'goal'});}
-  function legacy(g){const s=g.state,done=Object.values(s.direction.progress).reduce((n,p)=>n+p.stage,0);return {...s.direction.legacy,available:s.day>=90||s.day>=30&&done>=3,completedStages:done};}
-  function reviewLegacy(g){if(g.state.direction.legacy.reached&&g.state.direction.legacy.day===g.state.day)return {ok:true,message:'Puedes revisar el legado guardado y seguir viviendo.'};if(!legacy(g).available)return fail('Este hito se abre al completar tres tramos y 30 días, o al vivir 90 días.');const s=g.state,close=Object.entries(s.relationships).filter(([,r])=>r.trust>=60&&r.friendship>=40).map(([id])=>g.getNPC(id)?.name).slice(0,5),important=s.narrative.history.filter(h=>h.optionId!=='defer').slice(-3);const text=`${s.profile.name}, has vivido ${s.day} días, cuidando ${s.aspirations.map(id=>defs(g).aspirations.find(a=>a.id===id).label.toLowerCase()).join(' y ')}. ${close.length?'En tu historia están '+close.join(', ')+'.':'Has dejado espacio para conocer a otras personas.'} Completaste ${legacy(g).completedStages} tramos. Guardaste ${s.direction.memories.length} recuerdos. ${important.map(x=>x.text).join(' ')} Este es un cierre posible, no una obligación de dejar de vivir.`;s.direction.legacy={reached:true,day:s.day,title:'Lo que has construido',text,snapshots:[...s.direction.legacy.snapshots,{day:s.day,text}].slice(-20)};g._journal('Lo que has construido',text,'legacy',{tags:['legado']});return g._success('Tu legado queda guardado. Puedes seguir jugando.',{kind:'legacy'});}
+  function legacy(g) {
+    const s=g.state,done=Object.values(s.direction.progress).reduce((n,p)=>n+p.stage,0);
+    const close=Object.values(s.relationships).filter(r=>r.lastMet>0&&r.trust>=65&&r.friendship>=45).length;
+    const care=s.family.children.length+Math.floor(s.family.support/40);
+    const risks=s.direction.visitedLocations.length+s.life.pressure.history.length;
+    const reasons=[];
+    if(s.day<90&&!(s.day>=30&&done>=3))reasons.push('Vivir 90 días, o 30 días y tres tramos.');
+    if(!(done>=1||close>=4||care>=3||risks>=12))reasons.push('Dejar una huella: un tramo, cuatro vínculos cercanos, cuidados compartidos o doce experiencias.');
+    if(s.stats.health<35||s.stats.mood<25||s.stats.stress>=85)reasons.push('Recuperar salud y ánimo, y reducir el estrés por debajo de 85.');
+    if(s.life.economy.debt>150||s.life.pressure.expenses.some(b=>s.day>b.dueDay))reasons.push('Acordar una salida a los gastos vencidos y reducir la deuda a 150 € o menos.');
+    return {...s.direction.legacy,available:reasons.length===0,completedStages:done,reasons};
+  }
+  function legacyPortrait(g) {
+    const s=g.state,asp=s.aspirations.slice().sort((a,b)=>s.direction.progress[b].stage-s.direction.progress[a].stage)[0];
+    const close=Object.entries(s.relationships).filter(([,r])=>r.lastMet>0&&r.trust>=55&&r.friendship>=35).sort((a,b)=>(b[1].friendship+b[1].trust)-(a[1].friendship+a[1].trust)).slice(0,5).map(([id])=>({id,name:g.getNPC(id).name,quote:s.relationships[id].sharedHistory.at(-1)?.text.slice(0,170)||'La confianza se construyó con tiempo compartido.'}));
+    const unresolved=[];
+    for(const b of s.life.pressure.expenses)unresolved.push(`Quedó pendiente ${defs(g).expenseCatalog.find(x=>x.id===b.kind).title.toLowerCase()}.`);
+    for(const [id,r]of Object.entries(s.relationships))if(r.conflict>25)unresolved.push(`Una conversación por retomar con ${g.getNPC(id).name}.`);
+    if(s.life.economy.debt)unresolved.push(`Una deuda de ${s.life.economy.debt} € sigue abierta.`);
+    if(s.narrative.flags.secret_affair)unresolved.push('Una verdad íntima todavía no compartida.');
+    const names={estabilidad:'Un lugar donde respirar',creatividad:'Una obra que sigue abierta',comunidad:'Una mesa con sitio',familia:'Lo que aprendimos a cuidar',aventura:'Los caminos que elegiste',conocimiento:'Preguntas que te acompañan'};
+    let type=asp,title=names[asp];
+    if(s.family.children.length&&s.family.support>=60){type='cuidados';title='Una vida que sostuvo otras';}
+    else if(close.length>=4&&s.direction.progress[asp].stage===0){type='vinculos';title='Las personas que hicieron hogar';}
+    else if(s.life.pressure.helpCount>=5&&s.life.pressure.history.length>=8){type='resiliencia';title='Aprender a pedir y volver a empezar';}
+    const pool=[...s.direction.memories,...s.journal.filter(j=>!['day','summary'].includes(j.kind))].sort((a,b)=>a.day-b.day);
+    const unique=[...new Map(pool.map(j=>[`${j.day}:${j.title}`,j])).values()];
+    const timeline=unique.length<=12?unique:Array.from({length:12},(_,i)=>unique[Math.round(i*(unique.length-1)/11)]);
+    const moments=timeline.map(j=>({day:j.day,title:j.title.slice(0,140),quote:j.text.slice(0,230)}));
+    const text=`${s.profile.name}: ${title.toLowerCase()}. En ${s.day} días completaste ${legacy(g).completedStages} tramos. ${close.length?'Te acompañaron '+close.map(p=>p.name).join(', ')+'.':'Aprendiste a reservar espacio para otras personas.'} Tomaste ${s.life.pressure.history.length} decisiones ante imprevistos y exploraste ${s.direction.visitedLocations.length} lugares. ${unresolved.length?'Todavía queda: '+unresolved.slice(0,3).join(' '):'No todo fue sencillo; hoy tus compromisos tienen margen.'} Puedes seguir escribiendo esta vida.`;
+    return {type,title,text,people:close,timeline:moments,unresolved:unresolved.slice(0,8)};
+  }
+  function reviewLegacy(g) {
+    const s=g.state,check=legacy(g);
+    if(!check.available)return fail('Este cierre todavía no está listo. '+check.reasons.join(' '));
+    if(s.direction.legacy.reached&&s.direction.legacy.day===s.day)return {ok:true,message:'Puedes revisar el legado guardado y seguir viviendo.'};
+    const portrait=legacyPortrait(g);
+    s.direction.legacy={...portrait,reached:true,day:s.day,snapshots:[...s.direction.legacy.snapshots,{day:s.day,text:portrait.text}].slice(-6)};
+    const item={id:`${s.profile.name}:${s.savedAt||0}:${s.day}`,name:s.profile.name,day:s.day,type:portrait.type,title:portrait.title,text:portrait.text.slice(0,1600)};
+    const old=s.direction.book.find(x=>x.name===item.name&&x.type===item.type);
+    if(old)Object.assign(old,item);else s.direction.book.push(item);
+    s.direction.book=s.direction.book.slice(-12);
+    try{g.storage?.setItem('vinculos-book-v1',JSON.stringify(s.direction.book));}catch{/* La exportación conserva el libro aunque falle la copia separada. */}
+    g._journal(portrait.title,portrait.text,'legacy',{tags:['legado']});
+    return g._success('Tu legado queda guardado. Puedes seguir viviendo o empezar una nueva vida con una carta.',{kind:'legacy'});
+  }
+  function legacyText(g) {
+    const l=g.state.direction.legacy;
+    if(!l.reached)return '';
+    return [l.title,l.text,...(l.timeline||[]).map(m=>`Día ${m.day} · ${m.title}\n«${m.quote}»`),'Personas importantes',...(l.people||[]).map(p=>p.name+': '+p.quote),'Lo que quedó abierto',...(l.unresolved?.length?l.unresolved:['Un futuro todavía por escribir.'])].join('\n\n');
+  }
+  function legacySVG(g) {
+    const esc=t=>String(t).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;'}[c]));
+    const lines=legacyText(g).split('\n').flatMap(t=>t.match(/.{1,65}(?:\s|$)|.{1,65}/g)||['']).slice(0,100),height=120+lines.length*26;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 ${height}"><rect width="900" height="${height}" fill="#f5f1e5"/><g font-family="sans-serif" font-size="18" fill="#23493e">${lines.map((t,i)=>`<text x="40" y="${65+i*26}">${esc(t)}</text>`).join('')}</g></svg>`;
+  }
+  function newLife(g,profile={}) {
+    const s=g.state;
+    if(s.day<30&&!s.direction.legacy.reached)return fail('Vive al menos treinta días antes de pasar una carta a otra vida.');
+    const inheritance={kind:'carta',from:s.profile.name,text:(s.direction.legacy.text||'No pude resolverlo todo. Me quedo con las personas y las preguntas que aprendí a cuidar.').slice(0,1000)};
+    const book=clone(s.direction.book);
+    try{if(g.storage)g.storage.setItem('vinculos-previous-life',g.exportSave());}catch{return fail('No cabe una copia de esta vida. Expórtala antes de comenzar otra.');}
+    const next={name:'Alex',age:19,path:'free',aspirationIds:['comunidad'],...profile};
+    if(!next.name?.trim()||!Number.isInteger(next.age)||next.age<18||next.age>80)return fail('Elige un personaje adulto y un nombre para la nueva vida.');
+    g.create(next,{seed:g.state.rngState,book,inheritance});
+    g._effects({mood:3});g.state.life.skills.comunicacion.xp=3;
+    g._journal('Una carta que cruza vidas',`${inheritance.from} dejó estas palabras: «${inheritance.text}»`,'inheritance',{tags:['legado']});g.save();
+    return {ok:true,message:'Empiezas otra vida con una carta, una pequeña práctica y el libro anterior.'};
+  }
   function changeAspirations(g,ids){if(!Array.isArray(ids)||ids.length<1||ids.length>2||new Set(ids).size!==ids.length||ids.some(id=>!defs(g).aspirations.some(a=>a.id===id)))return fail('Elige una o dos aspiraciones distintas.');if([...ids].sort().join() === [...g.state.aspirations].sort().join())return fail('Ese ya es tu rumbo.');if(g.state.direction.lastChangeDay&&g.state.day-g.state.direction.lastChangeDay<7)return fail('Dale una semana de espacio a este cambio antes de volver a elegir.');const check=g._timeCheck(1,8);if(check)return check;g._advance(1);g._effects({energy:-8,mood:-3});g.state.aspirations=[...ids];g.state.direction.lastChangeDay=g.state.day;g._journal('Cambiar de rumbo',`Decides hacer espacio para ${ids.join(' y ')}. Dejar otro proyecto trae dudas y también nuevas posibilidades.`,'life',{tags:['aspiraciones']});return g._success('Cambias de rumbo y te das tiempo para encontrar el ritmo.',{kind:'direction'});}
   function memories(g,index){const entry=g.state.journal[index];if(!entry)return fail('No encuentras ese recuerdo.');const key=`${entry.day}:${entry.hour}:${entry.title}`.slice(0,300),list=g.state.direction.memories;if(list.some(m=>m.key===key))return fail('Ese momento ya está en tu línea de tiempo.');list.push({key,day:entry.day,hour:entry.hour,title:entry.title,text:entry.text});if(list.length>120)list.shift();g.save();return {ok:true,message:'Has guardado este momento en tu línea de tiempo.'};}
   function tutorial(g,action){const t=g.state.direction.tutorial;if(action==='skip'){t.enabled=false;t.completed=true;}else if(action==='restart'){t.enabled=true;t.step=0;t.completed=false;}else if(action==='next'){t.step=Math.min(5,t.step+1);t.completed=t.step===5;t.enabled=!t.completed;}else return fail('Elige cómo continuar la introducción.');g.save();return {ok:true,message:action==='skip'?'Puedes seguir a tu ritmo.':'La introducción se ha actualizado.'};}
@@ -205,7 +278,7 @@
     p.history.push({day:s.day,text});p.history=p.history.slice(-60);transaction(g,-cost,'extraordinary');g._journal('Una salida posible',text,'pressure',{tags:['economía','decision']});
     return g._success(text,{kind:'system',actionId:type});
   }
-  const api={afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
+  const api={legacyText,legacySVG,newLife,afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
   root.Vinculos=root.Vinculos||{};root.Vinculos.LifeSystems=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

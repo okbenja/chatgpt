@@ -6,3 +6,9 @@
 - Avisos de vínculos y renuncias visibles al cerrar metas. Cuatro conflictos narrativos nuevos.
 - Auditoría inicial: 0 pares de opciones equivalentes entre 536 opciones considerando costes, requisitos, resultados, modificadores y continuación. Se conservan las diferencias existentes.
 - Verificación:85 pruebas Node,65 comprobaciones Chromium y270 días de simulación corta.
+
+## V4 · Fase 2: legado con significado
+
+- Cierres por aspiración, vínculos, cuidados o resiliencia; condiciones de bienestar y obligaciones que pueden impedir alcanzarlos.
+- Hasta12 momentos reales, citas, personas y asuntos pendientes; exportación texto/SVG y nueva vida con carta y libro conservado.
+- Verificación:86 pruebas Node,65 comprobaciones Chromium y270 días de simulación corta.

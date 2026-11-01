@@ -276,9 +276,13 @@
   }
   function renderLegacyPanel() {
     const l=game.getLegacy();
-    return `<section class="legacy-panel panel content-section"><div class="eyebrow">UN CIERRE POSIBLE</div><h2>${escape(l.title)}</h2><p>${l.reached?escape(l.text):'Al vivir 90 días, o completar tres tramos de aspiración y 30 días, podrás reunir tu historia en un hito de legado. Después podrás seguir jugando.'}</p><button class="button secondary" id="legacy-review" ${!l.available?'disabled':''}>${l.reached?'Revisar mi legado':'Reunir mi historia'}</button></section>`;
+    return `<section class="legacy-panel panel content-section"><div class="eyebrow">LO QUE VA QUEDANDO</div><h2>${escape(l.title)}</h2><p>${l.reached?escape(l.text):'Un legado necesita tiempo, algo que hayas construido y margen para mirar atrás. No se alcanza solo por esperar.'}</p>${!l.available?`<ul>${l.reasons.map(r=>`<li>${escape(r)}</li>`).join('')}</ul>`:''}<button class="button secondary" id="legacy-review" ${!l.available?'disabled':''}>${l.reached?'Revisar mi legado':'Reunir mi historia'}</button></section><section class="panel content-section"><h2>Libro de vidas</h2>${game.state.direction.book.length?game.state.direction.book.map(b=>`<article><h3>${escape(b.title)}</h3><p>${escape(b.name)} · ${b.day} días</p><p>${escape(b.text)}</p></article>`).join(''):'<p>Tus cierres anteriores encontrarán aquí su lugar.</p>'}</section>`;
   }
-  function showLegacy() {const l=game.getLegacy();openDialog(`<div class="dialog-body legacy-panel"><div class="dialog-eyebrow">LO QUE HAS CONSTRUIDO · DÍA ${l.day}</div><h2 class="dialog-title">${escape(l.title)}</h2><p class="confirm-copy">${escape(l.text)}</p><div class="dialog-footer"><button class="button primary" data-close>Seguir jugando</button></div></div>`);}
+  function showLegacy() {
+    const l=game.getLegacy();
+    openDialog(`<div class="dialog-body legacy-panel"><div class="dialog-eyebrow">DÍA ${l.day} · ${escape(l.type||'historia')}</div><h2 class="dialog-title">${escape(l.title)}</h2><p>${escape(l.text)}</p><h3>Momentos que importaron</h3><ol class="legacy-timeline">${(l.timeline||[]).map(m=>`<li><strong>Día ${m.day}: ${escape(m.title)}</strong><blockquote>«${escape(m.quote)}»</blockquote></li>`).join('')}</ol><h3>Personas que dejaron huella</h3>${(l.people||[]).map(p=>`<p><strong>${escape(p.name)}</strong>: «${escape(p.quote)}»</p>`).join('')}<h3>Lo que quedó abierto</h3><p>${(l.unresolved||[]).map(escape).join(' ')||'Un futuro todavía por escribir.'}</p><div class="system-actions"><button class="button secondary" data-legacy-export="text">Compartir como texto</button><button class="button secondary" data-legacy-export="svg">Descargar imagen SVG</button><button class="button secondary" id="new-life">Una nueva vida con una carta</button><button class="button primary" data-close>Seguir jugando</button></div></div>`);
+  }
+  function downloadText(text,name,type) {const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   function renderMemories() {return `<section class="memory-timeline content-section"><div class="section-heading"><h2>Tu línea de tiempo</h2></div>${game.getMemories().length?game.getMemories().map(m=>`<article class="memory-card"><small>Día ${m.day} · ${formatHour(m.hour)}</small><h3>${escape(m.title)}</h3><p>${escape(m.text)}</p></article>`).join(''):'<p>Marca una estrella en el Diario para conservar un momento. Algunas historias también propondrán recuerdos por sí mismas.</p>'}</section>`;}
   function renderTrends() {
     let series=game.getTrends();if(!series.length){const links=Object.values(game.state.relationships);series=[{day:game.state.day,money:game.state.money,mood:game.state.stats.mood,relationships:links.length?links.reduce((sum,r)=>sum+r.friendship,0)/links.length:0}];}
@@ -557,6 +561,7 @@
     if(button.matches('a.brand')) {event.preventDefault();navigate('today');return;}
     if(button.dataset.view) return navigate(button.dataset.view);
     if(button.dataset.aspiration){syncCreatorFields();const id=button.dataset.aspiration;if(creatorDraft.aspirationIds.includes(id)){if(creatorDraft.aspirationIds.length===1)return toast('Conserva al menos una aspiración.',true);creatorDraft.aspirationIds=creatorDraft.aspirationIds.filter(x=>x!==id);}else if(creatorDraft.aspirationIds.length<2)creatorDraft.aspirationIds.push(id);else return toast('Puedes elegir hasta dos aspiraciones.',true);showCreator();return;}
+    if(button.dataset.legacyExport){const format=button.dataset.legacyExport;downloadText(game.exportLegacy(format),'mi-legado.'+(format==='svg'?'svg':'txt'),format==='svg'?'image/svg+xml':'text/plain');return;}
     if(button.dataset.expenseChoice)return run(game.lifeAction('resolveExpense',{choice:button.dataset.expenseChoice}));
     if(button.dataset.lifeAction)return runLifeAction(button);
     if(button.dataset.memoryIndex!==undefined){run(game.markMemory(Number(button.dataset.memoryIndex)));return;}
@@ -619,6 +624,8 @@
       case 'tutorial-skip':run(game.tutorialAction('skip'));break;
       case 'tutorial-restart':run(game.tutorialAction('restart'));closeDialog();navigate('today');break;
       case 'tutorial-rest':showDaySummary();break;
+      case 'new-life':openDialog(`<div class="dialog-body"><h2 class="dialog-title">Una carta para otra vida</h2><p>Empezarás con recursos y vínculos nuevos. Conservarás el libro de vidas y una carta; la vida actual tendrá una copia local. Exporta antes si quieres guardarla fuera de este navegador.</p><button class="button primary" id="confirm-new-life">Comenzar otra vida</button><button class="button secondary" data-close>Seguir aquí</button></div>`);break;
+      case 'confirm-new-life':{const r=game.newLife();if(r.ok){closeDialog();navigate('today');}else toast(r.message,true);break;}
       case 'legacy-review':{const r=game.reviewLegacy();render();if(r.ok)showLegacy();else toast(r.message,true);break;}
       case 'sound-play':syncAudio(true);break;
       case 'close-dialog':closeDialog();break;

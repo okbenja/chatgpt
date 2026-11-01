@@ -197,6 +197,8 @@
     changeAspirations(ids){return this._system('changeAspirations',[ids]);}
     getLegacy(){return this._system('legacy');}
     reviewLegacy(){return this._system('reviewLegacy');}
+    exportLegacy(format='text'){return this._system(format==='svg'?'legacySVG':'legacyText');}
+    newLife(profile={}){return this._system('newLife',[profile]);}
     getMemories(){return this.state.direction?.memories||[];}
     markMemory(index){return this._system('memories',[index]);}
     getTutorial(){return {...this.state.direction?.tutorial,steps:this.data.tutorialSteps||[]};}
