@@ -1137,3 +1137,124 @@ window.VINCULOS_DATA.events.find(e=>e.id==='secreto_pesa').trigger='infidelity';
     {id:'alianza',title:'Una red que también cambia',text:'Una amistad se vuelve apoyo para un proyecto común.'}
   ];
 })(window.VINCULOS_DATA);
+
+/* V4: escenas de los ámbitos que el piloto V3 apenas recorría. */
+(function(d){
+  const all=['juventud','adultez','madurez','vejez'];
+  d.startScenarios=[
+    {id:'ciudad',label:'Mudarte a otra ciudad',text:'90 €, piso compartido y alquiler un 15 % mayor durante los primeros 60 días.',money:90,home:'compartido',rules:{rentFactor:1.15,until:60}},
+    {id:'volver',label:'Volver al pueblo',text:'70 €, hogar familiar y gastos semanales un 20 % menores mientras reorganizas tu vida.',money:70,home:'familiar',rules:{rentFactor:.8,until:360}},
+    {id:'empleo',label:'Tu primer empleo',text:'45 €, contrato en Nexo, rendimiento inicial 45 y experiencia laboral un 20 % más rápida el primer mes.',money:45,home:'familiar',job:'nexo',rules:{experienceFactor:1.2,until:30}},
+    {id:'cero50',label:'Empezar de cero a los 50',text:'60 €, sin empleo; conservas conocimiento y aprendes habilidades un 15 % más rápido los primeros 90 días.',money:60,age:50,home:'familiar',rules:{practiceFactor:1.15,until:90}}
+  ];
+  d.startPresets[0].profile.scenario='volver';d.startPresets[1].profile.scenario='empleo';d.startPresets[2].profile.scenario='ciudad';
+  const groups=[
+    {id:'estudios',npc:'nora',skill:'tecnologia',asp:'conocimiento',conditions:{paths:['school','university'],locations:['colegio','universidad','biblioteca']},scenes:[
+      ['El nombre que falta','Un trabajo de grupo llega con una firma que nadie ha visto en las reuniones.','Rehacer el reparto con el grupo','Entregar solo tu parte y dejar constancia'],
+      ['Una matrícula que aprieta','La fecha de matrícula coincide con una semana en que faltan ingresos.','Buscar una franja de estudio viable','Pedir un aplazamiento y retrasar el plan'],
+      ['Preguntar en voz alta','Una explicación deja a varias personas atrás, pero nadie interrumpe.','Hacer la pregunta que falta','Hablar después con quien se perdió'],
+      ['El aula cambia de sitio','Una reforma obliga a estudiar en un espacio compartido y ruidoso.','Preparar un rincón con el grupo','Reducir el temario de hoy'],
+      ['La defensa del proyecto','Faltan dos días para defender una idea que todavía tiene una grieta.','Ensayar y reconocer el punto débil','Simplificar el proyecto antes de presentarlo'],
+      ['Una beca con condiciones','La beca pide colaborar unas tardes que antes reservabas a tus amistades.','Aceptar una colaboración acotada','Buscar otra financiación y conservar esas tardes'],
+      ['No copiar la misma vida','Un compañero parece tener un plan para todo. Tú no sabes aún qué quieres.','Compartir tus dudas sin competir','Probar una asignatura fuera de tu plan'],
+      ['El examen y el turno','Una sustitución pagada coincide con la sesión de repaso.','Ir al repaso y perder ese ingreso','Estudiar por tu cuenta después del trabajo'],
+      ['Una tutoría difícil','Tu tutoría confirma que el trabajo necesita una revisión seria.','Rehacer el argumento con tiempo','Cambiar a una pregunta más pequeña'],
+      ['Después de la nota','La nota mejora, pero no tanto como esperabas después de tantas horas.','Revisar qué aprendiste y qué no','Dejar espacio para otra cosa esta tarde']
+    ]},
+    {id:'noche',npc:'celia',skill:'comunicacion',asp:'aventura',content:{nightlife:true},conditions:{locations:['discoteca','bar','azotea','playa','centrocultural','restaurante'],hour:{min:18}},scenes:[
+      ['La mesa que se suma','Un grupo conocido propone juntar mesas. No conoces a la mitad.','Compartir un rato sin alargar toda la noche','Quedarte con el plan que ya tenías'],
+      ['El último transporte','La conversación va bien, pero pronto sale el último transporte cómodo.','Despedirte dejando ganas de otra charla','Cambiar de regreso y asumir el gasto'],
+      ['No era una cita','Una invitación se ha entendido de dos formas distintas.','Aclarar qué te apetece antes de seguir','Cerrar el plan con amabilidad'],
+      ['Una canción de otra época','Suena una canción que conecta a personas que no se habían hablado.','Acercarte a compartir el recuerdo','Escuchar desde tu sitio y descansar'],
+      ['El grupo y tu bolsillo','La siguiente ronda sale del presupuesto que habías decidido.','Proponer un plan que puedas pagar','Despedirte sin inventar una excusa'],
+      ['Después del ruido','Fuera del local, alguien parece agotado aunque dentro sonreía.','Preguntar si quiere compañía o espacio','Buscar un regreso tranquilo para ti'],
+      ['Dos números en una servilleta','Después de hablar, no sabéis si intercambiar contacto o dejarlo aquí.','Preguntar si le apetece seguir en contacto','Guardar el encuentro como algo de esta noche'],
+      ['Una amistad en la barra','Ves a una amistad que llevaba días distante y no sabes cómo acercarte.','Pedir un momento sin exigir explicaciones','Saludar y proponer hablar otro día'],
+      ['La fiesta cambia de lugar','La fiesta sigue en otro sitio, más lejos y con otro ambiente.','Conocer el nuevo plan y poner hora de salida','Volver cuando todavía tienes energía'],
+      ['La mañana que habías prometido','Salir un poco más implicaría llegar cansade a un compromiso de mañana.','Cerrar la noche para cuidar la mañana','Reorganizar el compromiso antes de alargarla']
+    ]},
+    {id:'pareja',npc:'$partner',skill:'comunicacion',asp:'familia',content:{romance:true},conditions:{relationships:{'$partner':{status:['dating','partner']}}},scenes:[
+      ['Una cita sin presupuesto','Las ganas de verse no coinciden con el dinero disponible.','Diseñar una cita pequeña entre ambos','Dejar el plan para un día con más margen'],
+      ['Dos formas de descansar','Una persona quiere salir; la otra necesita silencio.','Reservar ratos distintos sin medir cariño','Elegir un plan compartido más corto'],
+      ['Un mensaje sin respuesta','Una conversación por mensajes quedó abierta y cada quien imagina algo distinto.','Preguntar antes de sacar conclusiones','Explicar que necesitas hablar en persona'],
+      ['La llave y el espacio','La idea de compartir más espacio entusiasma y también trae dudas.','Hablar de límites antes de dar la llave','Mantener casas separadas por ahora'],
+      ['Un cumpleaños entre familias','Las dos familias han preparado planes para la misma tarde.','Acordar un reparto posible','Elegir un plan y explicar la ausencia'],
+      ['Los cuidados invisibles','Alguien lleva varias semanas resolviendo las pequeñas tareas sin pedirlo.','Revisar el reparto y asumir una parte','Reducir compromisos antes de prometer más'],
+      ['Celos que se pueden nombrar','Una amistad cercana despierta inseguridad sin haber roto ningún acuerdo.','Escuchar sin entregar el control de tus amistades','Pedir una pausa y retomar el tema con calma'],
+      ['El futuro no tiene la misma fecha','Hablar de futuro descubre que no imagináis los cambios al mismo ritmo.','Compartir tiempos concretos sin imponerlos','Aceptar que una decisión tendrá que esperar'],
+      ['La cita que salió regular','Habíais esperado mucho un plan que terminó con frío y cansancio.','Encontrar algo que sí queréis repetir','Admitir que hoy fue difícil y descansar'],
+      ['Seguir eligiendo','La relación ya tiene rutinas y algunas se han vuelto invisibles.','Preguntar qué queréis conservar de verdad','Cambiar una costumbre sin rehacerlo todo']
+    ]},
+    {id:'trabajo',npc:'gabriel',skill:'tecnologia',asp:'estabilidad',conditions:{jobs:['nexo','hosteleria','creativo','autonomo']},scenes:[
+      ['Un encargo con bordes borrosos','El encargo crece cada vez que parece que vas a terminarlo.','Renegociar el alcance antes de seguir','Entregar una parte y cerrar la jornada'],
+      ['El crédito compartido','Una presentación deja fuera el nombre de quien resolvió la parte difícil.','Reconocer la colaboración delante del equipo','Hablar primero con la persona afectada'],
+      ['Un turno que nadie quiere','La sustitución paga más, pero rompe el descanso que habías reservado.','Aceptar solo una parte del turno','Rechazarlo y conservar el descanso'],
+      ['La primera devolución','Un cliente devuelve un trabajo que creías bien resuelto.','Escuchar el problema y proponer un ajuste','Acordar qué no forma parte del encargo'],
+      ['Trabajar sin dejar de aprender','Una herramienta nueva acelera algunas tareas y te deja atrás en otras.','Dedicar tiempo de trabajo a aprenderla','Pedir apoyo y mantener el método conocido'],
+      ['Una reunión fuera de hora','La reunión se propone justo cuando termina tu jornada.','Pedir que entre en el horario acordado','Enviar tu parte y no asistir esta vez'],
+      ['Dos ofertas pequeñas','Llegan dos propuestas que por separado parecen fáciles de aceptar.','Elegir una y hacerla con cuidado','Negociar plazos antes de decidir'],
+      ['Poner precio a tu tiempo','Alguien pide un favor profesional que ocuparía toda una tarde.','Ofrecer un presupuesto claro','Compartir orientación sin hacer el trabajo entero'],
+      ['El error del equipo','Un error no es solo de una persona, aunque sería fácil señalarla.','Revisar el proceso con el equipo','Corregir lo urgente y pedir otra revisión'],
+      ['Antes de aceptar el ascenso','El puesto ofrece más dinero y disponibilidad casi permanente.','Pedir límites claros por escrito','Conservar el puesto actual por ahora']
+    ]},
+    {id:'hogar',npc:'hermana',skill:'cocina',asp:'comunidad',conditions:{locations:['casa','casa_familiar']},scenes:[
+      ['La nevera compartida','Una compra desaparece y deja un mensaje pasivo en la puerta.','Hablar de compras y espacio común','Separar una pequeña parte sin discutir hoy'],
+      ['Un ruido al otro lado','El horario de descanso de alguien no coincide con el tuyo.','Acordar una franja tranquila','Buscar un arreglo temporal para esta noche'],
+      ['Una visita que se alarga','Una visita ocupa la casa varios días más de lo acordado.','Revisar la fecha con quien invitó','Ceder unos días y pedir una fecha firme'],
+      ['La factura sin repartir','La factura ha subido y nadie tiene claro por qué.','Revisar consumos y reparto','Pagar tu parte y dejar pendiente una revisión'],
+      ['Cocinar con lo que queda','La compra tendrá que esperar y quedan ingredientes que no combinan mucho.','Inventar una comida y compartirla','Preparar algo sencillo y guardar el resto'],
+      ['Una pared por pintar','La pared necesita arreglo justo cuando habías reservado una salida.','Organizar una tarde de reparación','Aplazar la mejora y mantener el plan'],
+      ['La primera noche a solas','La casa está en silencio por primera vez después de muchos días.','Habitar ese rato sin llenarlo de tareas','Invitar a alguien a un plan pequeño'],
+      ['Una caja que no abres','Queda una caja de la mudanza con cosas que no sabes dónde poner.','Elegir qué conservar y qué soltar','Guardar la caja y resolver solo lo necesario'],
+      ['Volver no es retroceder','Alguien pregunta cuánto tiempo piensas quedarte en el hogar familiar.','Explicar un plan provisional y tus límites','Reconocer que todavía no tienes fecha'],
+      ['Una casa que admite cambios','Las rutinas del hogar funcionaron un tiempo, pero ya no a todo el mundo.','Repartir de nuevo las tareas','Probar un cambio pequeño durante una semana']
+    ]},
+    {id:'mascota',npc:'mateo',skill:'deporte',asp:'familia',conditions:{pet:true,locations:['casa','plaza','mercado','gimnasio']},scenes:[
+      ['Un paseo con lluvia','Llueve justo cuando tu mascota necesita su rato de actividad.','Preparar un paseo corto y adecuado','Organizar juego y cuidados en casa'],
+      ['La visita de revisión','La revisión periódica coincide con un día cargado.','Reservar el tiempo y reorganizar un plan','Pedir otra cita y preparar los cuidados'],
+      ['No come lo de siempre','La comida habitual ya no parece sentarle igual.','Consultar y revisar la rutina con calma','Observar y anotar antes de cambiar nada'],
+      ['El vecino que se asusta','Un encuentro en el portal descubre que alguien teme a los animales.','Dar espacio y acordar cómo cruzarse','Elegir otro horario por unos días'],
+      ['Juguetes y presupuesto','El juguete más vistoso cuesta más que el resto de la compra.','Preparar un juego con lo que tienes','Comprar una opción sencilla y duradera'],
+      ['Un viaje con cuidados','Una salida requiere dejar resuelto quién cuidará de tu mascota.','Organizar cuidados y sus límites','Acortar la salida para volver antes'],
+      ['Aprender a estar en calma','La excitación del paseo cuesta bajarla al llegar a casa.','Practicar una rutina tranquila','Reducir estímulos y observar qué ayuda'],
+      ['El pelo en el sofá','La convivencia encuentra un problema pequeño que se repite todos los días.','Repartir limpieza y acordar espacios','Cambiar una funda y revisar después'],
+      ['Una tarde acompañada','Una tarde difícil cambia de ritmo con una compañía que no exige palabras.','Compartir presencia y cuidados','Descansar cerca sin convertirlo en tarea'],
+      ['El cuidado también cambia','La rutina que servía al principio ya no encaja igual.','Revisar actividad y descanso','Cambiar una cosa antes de tocar todo']
+    ]}
+  ];
+  let index=0;
+  for(const group of groups)for(const scene of group.scenes){
+    const i=index++,id='v4_ambito_'+i,[title,text,a,b]=scene,chain=i%6===0,cost=group.id==='pareja'?10:group.id==='noche'?8:group.id==='mascota'?5:0;
+    const rel={friendship:4,trust:3,...(group.id==='pareja'?{romance:3}:{})};
+    const next=chain?{eventId:id+'_revision',delayDays:2}:undefined;
+    const result=(rid,prose,effects,weight=1)=>({id:rid,text:prose,weight,effects,next});
+    const options=[
+      {id:'afrontar',text:a+` · 1,5 h, 9 energía${cost?', '+cost+' €':''}`,duration:1.5,energyCost:9,cost,results:[{...result('paso',a+'. El acuerdo es concreto, aunque deja otra tarea esperando.',{skills:{[group.skill]:4},stats:{stress:4,knowledge:2},performance:group.id==='trabajo'?4:0,petCare:group.id==='mascota'?8:0,relationships:{[group.npc]:rel},flags:{[id]:a}},3),quality:'positive',modifiers:[{skill:group.skill,factor:.025},{relationship:'trust',npcId:group.npc,factor:.008}]},{...result('ajuste',a+'. El primer intento ocupa más de lo previsto. Toca reducir una parte del plan.',{skills:{[group.skill]:2},stats:{stress:8,mood:-2},flags:{[id]:a+' con un ajuste'}},1),quality:'negative'}]},
+      {id:'alternativa',text:b+' · 30 min; renuncias a parte del avance',duration:.5,results:[result('limite',b+'. Nombras lo que no puedes sostener en vez de prometerlo todo.',{skills:{[group.skill]:1},stats:{stress:-5,mood:2},performance:group.id==='trabajo'?-2:0,relationships:{[group.npc]:{trust:1}},flags:{[id]:b}})]},
+      {id:'acompanar',text:'Pedir colaboración · 2 h y 12 energía; conservar el dinero',duration:2,energyCost:12,results:[result('compartido','Compartes la decisión sobre '+title.toLowerCase()+'. La otra persona aporta una parte y también señala sus límites.',{skills:{comunicacion:3},stats:{stress:-2},relationships:{[group.npc]:{friendship:6,trust:4}},flags:{[id]:'pedir colaboración'}})]}
+    ];
+    d.events.push({id,title,text,variants:[text+' Recuerdas que no todos los compromisos tienen que hacerse hoy.'],introducedIn:4,conditions:{lifeStages:all,...group.conditions},content:group.content||{},npcId:group.npc,aspirations:[group.asp],tags:[group.id,'decision'],weight:3,cooldown:28,maxOccurrences:chain?1:8,options});
+    if(chain){
+      d.events.push({id:id+'_revision',title:'Revisar '+title.toLowerCase(),text:`Después de {memory:${id}}, llega el momento de comprobar qué cambió.`,variants:[`La decisión sobre ${title.toLowerCase()} sigue teniendo una parte abierta: {memory:${id}}.`],introducedIn:4,conditions:{lifeStages:all},content:group.content||{},npcId:group.npc,tags:[group.id,'continuación'],weight:1,cooldown:360,maxOccurrences:1,chainOnly:true,options:[
+        {id:'revisar',text:'Revisar el acuerdo · 1 h y 5 energía',duration:1,energyCost:5,results:[{id:'cambio',weight:1,text:'Separáis lo que funcionó de lo que solo parecía una buena idea. Acordáis un cambio pequeño.',effects:{skills:{[group.skill]:3},relationships:{[group.npc]:{trust:3}},flags:{[id+'_revision']:'hacer un cambio pequeño'}},next:{eventId:id+'_cierre',delayDays:3}}]},
+        {id:'distancia',text:'Dar más tiempo · 30 min y +3 estrés',duration:.5,results:[{id:'espacio',weight:1,text:'Todavía no hay una respuesta clara. Dejáis otra fecha para hablar sin fingir que está resuelto.',effects:{stats:{stress:3},flags:{[id+'_revision']:'dejar espacio a otra respuesta'}},next:{eventId:id+'_cierre',delayDays:4}}]}
+      ]});
+      d.events.push({id:id+'_cierre',title:'Lo que dejó '+title.toLowerCase(),text:`Tras {memory:${id+'_revision'}}, puedes elegir qué conservar de este intento.`,variants:[],introducedIn:4,conditions:{lifeStages:all},content:group.content||{},npcId:group.npc,tags:[group.id,'recuerdo'],weight:1,cooldown:360,maxOccurrences:1,chainOnly:true,important:true,options:[
+        {id:'compartir',text:'Contarlo con sus dudas · 1 h y 4 energía',duration:1,energyCost:4,results:[{id:'memoria',weight:1,text:'Lo cuentas sin convertir tu decisión en una receta para otras vidas. La conversación deja una confianza nueva.',effects:{skills:{comunicacion:4},relationships:{[group.npc]:{friendship:4,trust:4}},important:true}}]},
+        {id:'guardar',text:'Conservarlo para ti · 30 min',duration:.5,results:[{id:'propio',weight:1,text:'Guardas el momento sin necesidad de explicarlo. Haberlo vivido ya cambió cómo miras lo que viene.',effects:{stats:{mood:4,stress:-4},important:true}}]}
+      ]});
+    }
+  }
+  const scenarioScenes={
+    ciudad:['El mapa que no conoces','Una fianza pendiente','La parada equivocada','Encontrar tu primer rincón','El acento de otra ciudad','Una invitación de tu nueva calle'],
+    volver:['La habitación que cambió','Una pregunta conocida','Volver a cruzar la plaza','Lo que no has contado al volver','Un favor entre vecinos','Una costumbre que ya no es tuya'],
+    empleo:['Tu primer correo de equipo','Un horario que aprender','La primera paga tiene destino','Preguntar sin fingir experiencia','Un compañero que te orienta','El primer límite de la jornada'],
+    cero50:['Presentarte de otra manera','Un currículum con huecos','Lo que todavía sabes hacer','Aprender sin volver a tener veinte','Una amistad que reaparece','Un plan sin pedir permiso a la edad']
+  };
+  for(const scenario of d.startScenarios)scenarioScenes[scenario.id].forEach((title,i)=>d.events.push({id:'v4_inicio_'+scenario.id+'_'+i,title,text:`${title}: tu decisión de ${scenario.label.toLowerCase()} se cruza con un plan que no habías previsto. Puedes invertir tiempo o conservar margen.`,variants:[`El comienzo no termina el primer día. ${title} abre otra conversación en esta nueva etapa.`],introducedIn:4,conditions:{lifeStages:all,scenarios:[scenario.id],day:{min:1,max:180}},tags:['comienzo',scenario.id],weight:4,cooldown:60,maxOccurrences:1,npcId:scenario.id==='volver'?'madre':'ines',options:[
+    {id:'invertir',text:'Dar un paso concreto · 2 h y 10 energía',duration:2,energyCost:10,results:[{id:'paso',weight:1,text:'Distingues lo que has elegido de lo que solo esperaban de ti. Un plan pequeño empieza a tener fecha.',effects:{skills:{comunicacion:3},stats:{responsibility:3,stress:4},flags:{['inicio_'+scenario.id+'_'+i]:'dar un paso concreto'}}}]},
+    {id:'margen',text:'Buscar compañía antes de decidir · 1 h y 4 energía',duration:1,energyCost:4,results:[{id:'apoyo',weight:1,text:'Compartes las dudas sin pedir que alguien decida por ti. Esta vez no necesitas hacerlo todo a solas.',effects:{stats:{stress:-4,mood:3},relationships:{[scenario.id==='volver'?'madre':'ines']:{trust:3}}}}]}
+  ]}));
+  d.worldNews.push({id:'festival_oficios',title:'Feria de oficios',text:'La feria del barrio acerca encargos y mantiene el centro cultural abierto durante varios días.',days:7,jobPayFactor:1.15},
+    {id:'revision_mercado',title:'El mercado necesita arreglos',text:'Una revisión obliga a cerrar el mercado durante tres días. Los puestos coordinan otra semana.',days:3,closed:['mercado'],costFactor:1.06});
+})(window.VINCULOS_DATA);

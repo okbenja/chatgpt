@@ -46,6 +46,7 @@
     const inList = (value, allowed) => !allowed || (Array.isArray(allowed) ? allowed : [allowed]).includes(value);
     if (!inList(s.profile.path, conditions.paths)) return { ok: false, reason: 'Este encuentro pertenece a otro itinerario.' };
     if (!inList(s.location, conditions.locations)) return { ok: false, reason: 'Este encuentro sucede en otro lugar.' };
+    if(conditions.scenarios&&!conditions.scenarios.includes(s.direction?.scenario))return {ok:false,reason:'Esta historia pertenece a otra situación inicial.'};
     if(conditions.aspirations && !conditions.aspirations.some(id=>(s.aspirations || []).includes(id)))return {ok:false,reason:'Esta opción sigue otra aspiración.'};
     for(const [id,req] of Object.entries(conditions.skills || {}))if(!range(s.life?.skills[id]?.xp || 0,req))return {ok:false,reason:'Necesitas más práctica en esa habilidad.'};
     if(conditions.jobs && !inList(s.life?.employment.jobId,conditions.jobs))return {ok:false,reason:'Corresponde a otro oficio.'};
@@ -180,7 +181,8 @@
       return getPendingEvent(game);
     }
     let today=0;for(let i=memory.history.length-1;i>=0&&memory.history[i].day===game.state.day;i--)if(!findEvent(game,memory.history[i].eventId)?.chainOnly)today++;
-    if (today >= 2 || game.state.hour >= 22.5 || game.state.stats.energy <= 0) return null;
+    const evening=game.state.hour>=18&&!memory.history.some(h=>h.day===game.state.day&&(h.tags||[]).some(t=>['noche','encuentro_casual'].includes(t)));
+    if (today >= (evening?3:2) || game.state.hour >= 22.5 || game.state.stats.energy <= 0) return null;
     if (context.kind !== 'day' && context.kind !== 'start' && rng(game) > 0.48) return null;
     const candidates = getEventWeights(game).filter(item => item.weight > 0);
     const special = candidates.filter(item => findEvent(game, item.id).conditions?.special);

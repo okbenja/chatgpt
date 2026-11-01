@@ -248,7 +248,7 @@ def main():
                 context.close()
 
                 mobile=browser.new_context(viewport={'width':360,'height':844},is_mobile=True,has_touch=True)
-                mp=mobile.new_page();observe(mp);mp.goto(url);mp.locator('.hero-card').wait_for()
+                mp=mobile.new_page();observe(mp);mp.goto(url);prepare_full_ui(mp);mp.locator('.hero-card').wait_for()
                 import_save(mp,seed)
                 nav(mp,'map');mp.locator('[data-explore-filter="noche"]').click()
                 check(not mp.evaluate('document.documentElement.scrollWidth>innerWidth+1'),'nightlife Explore fits a 360px screen')

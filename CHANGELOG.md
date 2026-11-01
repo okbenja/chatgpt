@@ -34,3 +34,10 @@
 - Resumen único con causas por estadística accesibles al tocar o pasar el cursor. Barras con meter, aria-current, estado plegable y navegación inferior de44px a360px.
 - Verificación:92 pruebas Node más auditoría,42 comprobaciones nuevas de navegador y65 regresiones de sistemas;270 días de simulación corta. Guardado sigue bajo los umbrales de10años.
 - Corrección de validación: el límite de gastos importados admite también el primer imprevisto grave en dificultad exigente. Repetidas todas las pruebas y el diagnóstico antes de continuar.
+
+## V4 · Fase 7: contenido y rejugabilidad
+
+-104 eventos adicionales:60 escenas de estudios, noches, pareja, trabajo, hogar y mascota,20 continuaciones que completan10 nuevas cadenas de tres pasos y24 eventos de escenario(seis por comienzo).
+-Cuatro situaciones con recursos y reglas distintos:ciudad,pueblo,primer empleo y empezar de cero a los50. Noticias con efectos en salarios,precios y cierres.
+-El catálogo total tiene336 eventos y816 opciones. Auditoría:0pares de opciones equivalentes,0textos base duplicados,0referencias rotas y0continuaciones sin entrada.
+-Verificación:95 pruebas Node más auditoría,42 comprobaciones nuevas Chromium y65 regresiones;1.440días de diagnóstico. Comenzado el ensayo final de172.800días con ocho perfiles y20semillas.

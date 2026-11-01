@@ -193,7 +193,7 @@
     _system(method,args=[]) {const m=root.Vinculos?.LifeSystems;return m&&typeof m[method]==='function'?m[method](this,...args):undefined;}
     getPersonInfo(id){return this._system('personInfo',[id]);}
     getSystemUnlocks(){return this._system('unlocks');}
-    startPreset(id){return this._system('start',[id]);}
+    startPreset(id,scenario){return this._system('start',[id,scenario]);}
     getEconomy(){return this._system('get',['economy']);}
     getEmployment(){return this._system('get',['employment']);}
     getSkills(){return this._system('get',['skills'])||[];}
@@ -263,7 +263,7 @@
       this._system('hydrate',[this.state,{profile,...options}]);
       const traitPersonality = { empatia: 'empathy', creatividad: 'creativity', sociabilidad: 'sociability', ambicion: 'discipline', curiosidad: 'confidence', serenidad: 'confidence' };
       for (const id of this.state.profile.traitIds) if (traitPersonality[id]) this._personality(traitPersonality[id], 12);
-      this._journal('Una vida por escribir', 'Llegas a tu nuevo comienzo con 120 € y muchas posibilidades. Tú decides qué relaciones y proyectos cuidar.', 'milestone');
+      this._journal('Una vida por escribir', `Llegas a tu nuevo comienzo con ${this.state.money} € y muchas posibilidades. Tú decides qué relaciones y proyectos cuidar.`, 'milestone');
       this._beginDay();
       this._trackBaseline();
       this.save();
@@ -1119,6 +1119,7 @@
     updateProfile(profile) {
       if (!this.state) return fail('Crea tu personaje para comenzar.');
       if (!isObject(profile)) return fail('Los datos del personaje no son válidos.');
+      if(profile.scenario&&!this.data.startScenarios?.some(s=>s.id===profile.scenario))return fail('Elige un escenario válido.');
       const merged = { ...this.state.profile, ...profile };
       if (typeof merged.name !== 'string' || !merged.name.trim()) return fail('Elige un nombre para tu personaje.');
       const age = Number(merged.age);
@@ -1129,6 +1130,7 @@
       if(this.state.direction && Array.isArray(profile.aspirationIds)){const ids=profile.aspirationIds;if(ids.length<1||ids.length>2||new Set(ids).size!==ids.length||ids.some(id=>!this.data.aspirations.some(a=>a.id===id)))return fail('Elige una o dos aspiraciones distintas.');if(ids.slice().sort().join()!==this.state.aspirations.slice().sort().join()){if(this.state.day===1&&!this.state.ledger.actions.length)this.state.aspirations=ids.slice();else{const r=this.changeAspirations(ids);if(!r.ok)return r;}}}
       if(this.state.direction&&profile.difficulty)this.state.direction.settings.difficulty=profile.difficulty;
       this.state.profile = this._profile({ ...merged, age });
+      if(this.state.direction&&!this.state.direction.onboarding.started){if(profile.scenario){const r=this._system('setStartScenario',[profile.scenario]);if(!r.ok)return r;}this.state.direction.onboarding.started=true;}
       return this._success('Personaje actualizado. Tu historia y tus vínculos se conservan.',{kind:'profile'});
     }
 
