@@ -33,6 +33,14 @@ def check(value, label):
     print('PASS', label, flush=True)
 
 
+def prepare_full_ui(page):
+    if page.locator('[data-start-preset]').count():
+        page.locator('[data-start-preset="estudiante"]').click()
+        page.locator('#settings-top-button:visible, #settings-button:visible').first.click()
+        page.locator('#show-all-systems').check()
+        page.keyboard.press('Escape')
+
+
 def state(page):
     # V4 writes during idle time; observe completion rather than assuming sync IO.
     page.wait_for_function("!document.querySelector('#save-status')?.textContent.includes('Guardando los cambios')")
@@ -108,6 +116,7 @@ def main():
                 page=context.new_page()
                 observe(page)
                 page.goto(url)
+    prepare_full_ui(page)
                 page.locator('.hero-card').wait_for()
                 if page.locator('#dismiss-first-save').count():
                     page.locator('#dismiss-first-save').click()

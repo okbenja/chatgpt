@@ -19,8 +19,12 @@
     const settings=s.direction.settings;
     for(const key of ['nightlife','romance','casual','showAllSystems']) {
       if(settings[key]!==undefined&&typeof settings[key]!=='boolean')throw Error('Ajuste de contenido inválido');
-      if(settings[key]===undefined)settings[key]=key!=='showAllSystems';
+      if(settings[key]===undefined)settings[key]=key==='showAllSystems'?!!input.version:true;
     }
+    const onboarding=input.version===4?input.direction.onboarding:null;
+    if(onboarding&&(![onboarding.started,onboarding.decisionTaken].every(x=>typeof x==='boolean')))throw Error('Inicio inválido');
+    s.direction.onboarding=onboarding?clone(onboarding):{started:!!input.version,decisionTaken:!!input.version};
+    if(s.direction.tutorial.step>=3){s.direction.tutorial.step=3;s.direction.tutorial.completed=true;s.direction.tutorial.enabled=false;}
     const book=input.version===4?input.direction.book:input.book||[];
     if(!Array.isArray(book)||book.length>12||book.some(x=>!x||typeof x.text!=='string'||x.text.length>1600||typeof x.title!=='string'||typeof x.name!=='string'||!finite(x.day)))throw Error('Libro inválido');
     s.direction.book=clone(book);
@@ -132,13 +136,13 @@
     const next={name:'Alex',age:19,path:'free',aspirationIds:['comunidad'],...profile};
     if(!next.name?.trim()||!Number.isInteger(next.age)||next.age<18||next.age>80)return fail('Elige un personaje adulto y un nombre para la nueva vida.');
     g.create(next,{seed:g.state.rngState,book,inheritance});
-    g._effects({mood:3});g.state.life.skills.comunicacion.xp=3;
+    g.state.direction.onboarding.started=true;g._effects({mood:3});g.state.life.skills.comunicacion.xp=3;
     g._journal('Una carta que cruza vidas',`${inheritance.from} dejó estas palabras: «${inheritance.text}»`,'inheritance',{tags:['legado']});g.save();
     return {ok:true,message:'Empiezas otra vida con una carta, una pequeña práctica y el libro anterior.'};
   }
   function changeAspirations(g,ids){if(!Array.isArray(ids)||ids.length<1||ids.length>2||new Set(ids).size!==ids.length||ids.some(id=>!defs(g).aspirations.some(a=>a.id===id)))return fail('Elige una o dos aspiraciones distintas.');if([...ids].sort().join() === [...g.state.aspirations].sort().join())return fail('Ese ya es tu rumbo.');if(g.state.direction.lastChangeDay&&g.state.day-g.state.direction.lastChangeDay<7)return fail('Dale una semana de espacio a este cambio antes de volver a elegir.');const check=g._timeCheck(1,8);if(check)return check;g._advance(1);g._effects({energy:-8,mood:-3});g.state.aspirations=[...ids];g.state.direction.lastChangeDay=g.state.day;g._journal('Cambiar de rumbo',`Decides hacer espacio para ${ids.join(' y ')}. Dejar otro proyecto trae dudas y también nuevas posibilidades.`,'life',{tags:['aspiraciones']});return g._success('Cambias de rumbo y te das tiempo para encontrar el ritmo.',{kind:'direction'});}
   function memories(g,index){const entry=g.state.journal[index];if(!entry)return fail('No encuentras ese recuerdo.');const key=`${entry.day}:${entry.hour}:${entry.title}`.slice(0,300),list=g.state.direction.memories;if(list.some(m=>m.key===key))return fail('Ese momento ya está en tu línea de tiempo.');list.push({key,day:entry.day,hour:entry.hour,title:entry.title,text:entry.text});if(list.length>120)list.shift();g.save();return {ok:true,message:'Has guardado este momento en tu línea de tiempo.'};}
-  function tutorial(g,action){const t=g.state.direction.tutorial;if(action==='skip'){t.enabled=false;t.completed=true;}else if(action==='restart'){t.enabled=true;t.step=0;t.completed=false;}else if(action==='next'){t.step=Math.min(5,t.step+1);t.completed=t.step===5;t.enabled=!t.completed;}else return fail('Elige cómo continuar la introducción.');g.save();return {ok:true,message:action==='skip'?'Puedes seguir a tu ritmo.':'La introducción se ha actualizado.'};}
+  function tutorial(g,action){const t=g.state.direction.tutorial;if(action==='skip'){t.enabled=false;t.completed=true;}else if(action==='restart'){t.enabled=true;t.step=0;t.completed=false;}else if(action==='next'){t.step=Math.min(3,t.step+1);t.completed=t.step===3;t.enabled=!t.completed;}else return fail('Elige cómo continuar la introducción.');g.save();return {ok:true,message:action==='skip'?'Puedes seguir a tu ritmo.':'La introducción se ha actualizado.'};}
   function transaction(g,amount,type){g.state.life.economy.transactions.push({day:g.state.day,amount,type});g.state.life.economy.transactions=g.state.life.economy.transactions.slice(-300);}
   function action(g,type,payload={}){
     const special=pressureAction(g,type,payload);if(special)return special;
@@ -198,7 +202,7 @@
     if(/comer|cocina|tapas|merienda|desayuno/.test(id))l.wellbeing.nutrition=cap(l.wellbeing.nutrition+15);
     if(/paseo|ejercicio|gimnasio/.test(id)){l.wellbeing.movement=cap(l.wellbeing.movement+12);l.skills.deporte.xp=cap(l.skills.deporte.xp+1);l.skills.deporte.lastPracticeDay=s.day;}
     if(/estudi|biblioteca|clase/.test(id)){l.skills.tecnologia.xp=cap(l.skills.tecnologia.xp+.5);l.skills.tecnologia.lastPracticeDay=s.day;}
-    const t=s.direction.tutorial;if(t.enabled){if(t.step===0&&extra.kind==='profile'||t.step===1&&extra.kind==='travel'||t.step===2&&extra.kind==='social'||t.step===3&&['action','system'].includes(extra.kind)||t.step===4&&extra.kind==='day'){t.step++;if(t.step>=5){t.completed=true;t.enabled=false;}}}
+    const t=s.direction.tutorial;if(t.enabled){if(t.step===0&&extra.kind==='profile'||t.step===1&&id==='firstChoice'||t.step===2&&extra.kind==='travel'){t.step++;if(t.step>=3){t.completed=true;t.enabled=false;}}}
     const stageNow=stage(g);if(stageNow!==s.lifeStage){g._journal('Otra etapa se abre',`Entras en ${defs(g).lifeStages.find(x=>x.id===stageNow).label.toLowerCase()}. Puedes revisar tus ritmos y prioridades.`,'life',{tags:['etapa']});s.lifeStage=stageNow;}
   }
   function beforeSleep(g){
@@ -274,6 +278,13 @@
     p.warnings=p.warnings.filter(w=>s.day-w.day<30).slice(-20);
   }
   function pressureAction(g,type,payload) {
+    if(type==='firstChoice') {
+      const s=g.state,item=defs(g).firstChoices.find(x=>x.id===payload.id);
+      if(!item||s.direction.onboarding.decisionTaken)return fail('Esta primera decisión ya tiene su lugar en tu historia.');
+      const check=g._timeCheck(item.duration,item.energy);if(check)return check;
+      g._advance(item.duration);g.applyEffects(item.effects);g._effects({energy:-item.energy});s.direction.onboarding.decisionTaken=true;
+      g._journal(item.title,item.text,'decision',{tags:['comienzo']});return g._success('Has dado el primer paso. Ahora puedes explorar el barrio.',{kind:'system',actionId:type});
+    }
     if(type!=='resolveExpense')return null;
     const s=g.state,p=s.life.pressure,b=p.expenses[0];
     if(!b)return fail('No hay gastos extraordinarios pendientes.');
@@ -314,8 +325,21 @@
     s.life.economy.weeks=s.life.economy.weeks.slice(-52);
     if(s.life.pressure)s.life.pressure.history=s.life.pressure.history.slice(-30);
   }
+  function unlocks(g) {
+    const s=g.state,all=s.direction.settings.showAllSystems;
+    return {economy:all||s.day>=4||s.money<60||s.life.pressure.expenses.length>0,work:all||s.day>=7||s.profile.path==='work',home:all||s.day>=14||s.life.home.type!=='familiar',pet:all||s.day>=21||!!s.life.pet,skills:all||s.day>=2,character:all||s.day>=2,family:all||s.day>=3,journal:all||s.day>=2};
+  }
+  function start(g,id) {
+    const item=defs(g).startPresets.find(x=>x.id===id);
+    if(!item)return fail('Elige uno de los comienzos disponibles.');
+    if(g.state.direction.onboarding.started)return fail('Tu historia ya ha empezado. Puedes cambiar el rumbo desde tu personaje.');
+    g.create({...g.state.profile,...item.profile},{seed:g.state.rngState,book:g.state.direction.book});
+    const s=g.state;s.direction.onboarding.started=true;s.direction.tutorial.step=1;
+    if(id==='mudanza'){s.life.home.type='compartido';s.life.home.roommateId='ines';}
+    g._journal(item.title,item.text,'milestone',{tags:['comienzo']});g.save();return {ok:true,message:'Ya tienes un rumbo. Elige qué cuidar primero.'};
+  }
   function compact(g){compactState(g.state);}
-  const api={compact,legacyText,legacySVG,newLife,afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
+  const api={start,unlocks,compact,legacyText,legacySVG,newLife,afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
   root.Vinculos=root.Vinculos||{};root.Vinculos.LifeSystems=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

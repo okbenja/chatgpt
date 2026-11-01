@@ -27,3 +27,9 @@
 - Pruebas de todos los NPC con17años y de hijos a0/17/18/25años. Auditoría del catálogo:0opciones equivalentes,0textos base duplicados y0referencias rotas; la cadena de infidelidad tiene entrada explícita desde el motor.
 - Diagnóstico: el prudente afronta un gasto superior a sus recursos y el descuidado no alcanza el cierre. Se ajusta el primer imprevisto grave por dificultad.
 - Verificación:91 pruebas Node más auditoría,65 comprobaciones Chromium y1.440 días con ocho perfiles. El informe largo se genera tras cerrar contenido y reglas.
+
+## V4 · Fase 5: primeros minutos y claridad
+
+- Tres arranques preparados y personalización, dos renuncias visibles antes de explorar y tutorial de tres pasos. Sistemas y pestañas progresivos; opción explícita de ver todo.
+- Resumen único con causas por estadística accesibles al tocar o pasar el cursor. Barras con meter, aria-current, estado plegable y navegación inferior de44px a360px.
+- Verificación:92 pruebas Node más auditoría,42 comprobaciones nuevas de navegador y65 regresiones de sistemas;270 días de simulación corta. Guardado sigue bajo los umbrales de10años.

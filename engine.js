@@ -120,12 +120,14 @@
     }
 
     _trackBaseline() {
-      this._trackedSnapshot = this.state ? { day: this.state.day, money: this.state.money } : null;
+      this._trackedSnapshot = this.state ? { day: this.state.day, money: this.state.money,stats:{...this.state.stats} } : null;
     }
 
     _recordMutation(message, extra) {
       if (!this.state.ledger || !this._trackedSnapshot || this._trackedSnapshot.day !== this.state.day) return;
       const delta = this.state.money - this._trackedSnapshot.money;
+      if(this.state.version>=4){const reasons=this.state.ledger.reasons||(this.state.ledger.reasons={});for(const key of STATS){const amount=this.state.stats[key]-(this._trackedSnapshot.stats?.[key]??this.state.stats[key]);if(amount){const list=reasons[key]||(reasons[key]=[]);list.push({delta:amount,text:cleanText(message,'Decisiones y obligaciones del día',200)});if(list.length>12){const first=list.shift();list[0]={delta:list[0].delta+first.delta,text:'Otros momentos del día'};}}}}
+
       if (finite(extra.moneyEarned) || finite(extra.moneySpent)) {
         this.state.ledger.earned += Math.max(0, extra.moneyEarned || 0);
         this.state.ledger.spent += Math.max(0, extra.moneySpent || 0);
@@ -143,7 +145,8 @@
       const statChanges = Object.fromEntries(STATS.map(key => [key, this.state.stats[key] - start.stats[key]]));
       const relationshipChanges = Object.entries(this.state.relationships).map(([npcId, relationship]) => ({ npcId, name: this.getNPC(npcId)?.name || npcId, friendship: relationship.friendship - (start.relationships[npcId]?.friendship || 0), trust: relationship.trust - (start.relationships[npcId]?.trust || 0), romance: relationship.romance - (start.relationships[npcId]?.romance || 0) })).filter(change => change.friendship || change.trust || change.romance);
       const featured = this.state.narrative.history.filter(item => item.day === this.state.day).slice(-1)[0];
-      return { day: this.state.day, year: this.getCalendar().year, dateLabel: this.getCalendar().dateLabel, stats: statChanges, statChanges, earned: this.state.ledger.earned, spent: this.state.ledger.spent, moneyChange: this.state.money - start.money, actions: this.state.ledger.actions.map(action => action.text), relationshipChanges, sustainability: this.state.life?.lastWarning || '', highlight: featured ? featured.title || featured.text : relationshipChanges.length ? 'Dedicaste tiempo a tus vínculos.' : 'Cada día también deja espacio para empezar de nuevo.' };
+      const explanations=Object.fromEntries(STATS.map(key=>{const list=(this.state.ledger.reasons?.[key]||[]).map(x=>({...x}));const missing=statChanges[key]-list.reduce((n,x)=>n+x.delta,0);if(missing)list.push({delta:missing,text:'Situación inicial y ajustes del día'});return [key,list];}));
+      return { explanations,day: this.state.day, year: this.getCalendar().year, dateLabel: this.getCalendar().dateLabel, stats: statChanges, statChanges, earned: this.state.ledger.earned, spent: this.state.ledger.spent, moneyChange: this.state.money - start.money, actions: this.state.ledger.actions.map(action => action.text), relationshipChanges, sustainability: this.state.life?.lastWarning || '', highlight: featured ? featured.title || featured.text : relationshipChanges.length ? 'Dedicaste tiempo a tus vínculos.' : 'Cada día también deja espacio para empezar de nuevo.' };
     }
 
     getAnnualSummary(year = this.getCalendar().year) {
@@ -188,6 +191,8 @@
     }
 
     _system(method,args=[]) {const m=root.Vinculos?.LifeSystems;return m&&typeof m[method]==='function'?m[method](this,...args):undefined;}
+    getSystemUnlocks(){return this._system('unlocks');}
+    startPreset(id){return this._system('start',[id]);}
     getEconomy(){return this._system('get',['economy']);}
     getEmployment(){return this._system('get',['employment']);}
     getSkills(){return this._system('get',['skills'])||[];}
@@ -988,6 +993,7 @@
         this._recordMutation(`Reservas ${paid} € para los cuidados de la familia.`, { kind: 'family' });
         this._trackBaseline();
       }
+      if(this.state.version>=4){this._recordMutation('Estrés, obligaciones y bienestar al terminar el día.',{kind:'maintenance'});this._trackBaseline();}
       const summary = this.getDaySummary();
       if(this.state.direction)this._system('afterSummary',[summary]);
       this.state.summaries.push(summary);
@@ -1376,6 +1382,7 @@
       for(const [id,rel] of Object.entries(state.relationships))if(!state.dayStart.relationships[id])state.dayStart.relationships[id]={friendship:rel.friendship,trust:rel.trust,romance:rel.romance};
       const ledger = object(input.ledger);
       state.ledger = { earned: number(ledger.earned, 0, 1000000000), spent: number(ledger.spent, 0, 1000000000), actions: array(ledger.actions, 100).map(action => { object(action); return { hour: number(action.hour, 0, 23), text: text(action.text, 3000), kind: text(action.kind, 30) }; }) };
+      if(input.version>=4&&isObject(ledger.reasons)){state.ledger.reasons={};for(const key of STATS){if(ledger.reasons[key]!==undefined)state.ledger.reasons[key]=array(ledger.reasons[key],12).map(r=>{object(r);return {delta:number(r.delta,-1000,1000),text:text(r.text,220)};});}}
       state.summaries = array(input.summaries, 720).map(summary => {
         object(summary);
         const changes = {};

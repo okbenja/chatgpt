@@ -9,7 +9,7 @@
   --cream: #f6f7f2;
   --paper: #fff;
   --ink: #263d35;
-  --muted: #788178;
+  --muted: #59685d;
   --line: #e5e8df;
   --peach: #f7e4d3;
   --lavender: #e9e4f1;
@@ -1812,3 +1812,19 @@ button.tutorial-step { min-height: 44px; min-width: 44px; }
   .finance-grid { grid-template-columns: minmax(0,1fr); }
   .life-stage-chip { font-size: 10px; }
 }
+
+/* V4: empezar con una decisión, controles legibles y resumen táctil. */
+.start-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:14px;margin:20px 0;}
+.start-card {display:flex;flex-direction:column;gap:12px;min-height:110px;padding:20px;border:1px solid #8ca17f;border-radius:12px;background:#f0f5e9;text-align:left;color:#254536;}
+.start-card:hover {background:#e1edda;border-color:#456d43;}
+.start-card strong {font:600 19px Georgia,serif;}
+.start-card span,.goal-renunciation {font-size:12px;line-height:1.6;color:#425c3d;}
+.goal-renunciation {display:block;margin:8px 0;}
+.pressure-panel {border-color:#b99b71;background:#fff6e8;}
+.summary-stat summary {min-height:44px;cursor:pointer;display:flex;justify-content:space-between;gap:10px;align-items:center;}
+.summary-stat ul {padding-left:18px;font-size:12px;line-height:1.7;}
+.day-summary > details > summary {min-height:44px;cursor:pointer;font-weight:600;}
+.toggle-row small {display:block;color:#4a5f47;max-width:58ch;}
+.button,.text-button,summary {min-height:44px;}
+@media(max-width:900px){.sidebar .nav-list {grid-template-columns:repeat(var(--visible-tabs,6),minmax(0,1fr));}}
+@media(max-width:600px){.summary-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.summary-dialog {width:calc(100% - 20px);}.start-card {padding:17px;}.start-card span {font-size:13px;}}

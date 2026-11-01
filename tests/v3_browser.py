@@ -33,6 +33,14 @@ def check(value, label):
     print('PASS', label, flush=True)
 
 
+def prepare_full_ui(page):
+    if page.locator('[data-start-preset]').count():
+        page.locator('[data-start-preset="estudiante"]').click()
+        page.locator('#settings-top-button:visible, #settings-button:visible').first.click()
+        page.locator('#show-all-systems').check()
+        page.keyboard.press('Escape')
+
+
 def state(page):
     # V4 writes during idle time; observe completion rather than assuming sync IO.
     page.wait_for_function("!document.querySelector('#save-status')?.textContent.includes('Guardando los cambios')")
@@ -102,6 +110,7 @@ def full_game(browser, url):
     page = context.new_page()
     observe(page)
     page.goto(url)
+    prepare_full_ui(page)
     page.locator('main h1').wait_for()
     check(state(page)['version'] == 4, 'fresh game uses schema version 3')
     check(len(state(page)['aspirations']) in (1, 2), 'fresh game has a valid aspiration')
@@ -313,6 +322,7 @@ def mobile_game(browser, url):
     page = context.new_page()
     observe(page)
     page.goto(url)
+    prepare_full_ui(page)
     page.locator('main h1').wait_for()
     for view in ['today', 'character', 'journal', 'map', 'people', 'family']:
         nav(page, view)

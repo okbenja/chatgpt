@@ -1110,3 +1110,20 @@ window.VINCULOS_DATA = {
 
 // Esta cadena se abre por una decisión explícita en engine.js, no por sorteo.
 window.VINCULOS_DATA.events.find(e=>e.id==='secreto_pesa').trigger='infidelity';
+
+(function(d){
+  d.startPresets=[
+    {id:'estudiante',title:'Una entrega y poco margen',text:'Estudia con una beca justa. Tu primera decisión será cómo repartir el tiempo.',profile:{age:19,path:'university',aspirationIds:['conocimiento']}},
+    {id:'trabajador',title:'Tu primer turno',text:'Un empleo abre oportunidades y también ocupa horas que antes eran tuyas.',profile:{age:26,path:'work',aspirationIds:['estabilidad']}},
+    {id:'mudanza',title:'Una llave nueva',text:'Empieza en un piso compartido, con sus gastos y una persona por conocer.',profile:{age:30,path:'free',aspirationIds:['comunidad']}}
+  ];
+  d.firstChoices=[
+    {id:'ayudar',title:'Acompañar a alguien del barrio',text:'1 h · 5 energía · +4 afinidad con Mateo · +3 ánimo. Renuncias al ingreso.',duration:1,energy:5,effects:{stats:{mood:3},relationships:{mateo:{friendship:4,trust:3}}}},
+    {id:'encargo',title:'Aceptar un encargo corto',text:'1,5 h · 8 energía · +20 € · +5 estrés. El encuentro tendrá que esperar.',duration:1.5,energy:8,effects:{money:20,stats:{stress:5}}}
+  ];
+  d.tutorialSteps=[
+    {title:'Elige tu comienzo',text:'Escoge una situación o personaliza a tu protagonista.',targetView:'today'},
+    {title:'Una decisión que ya importa',text:'¿Prefieres un ingreso pequeño o dedicar tiempo a alguien? Ambas opciones dejan algo fuera.',targetView:'today'},
+    {title:'Haz tuyo el barrio',text:'Visita un lugar y conoce a alguien. Los demás sistemas aparecerán cuando los necesites.',targetView:'map'}
+  ];
+})(window.VINCULOS_DATA);
