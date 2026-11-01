@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "profile": {
+    "name": "Vera",
+    "lastName": "Vidal",
+    "age": 24,
+    "pronouns": "elle",
+    "gender": "nonbinary",
+    "skin": "#dca67d",
+    "hair": "#43332c",
+    "hairStyle": "curly",
+    "outfit": "#739486",
+    "traitIds": [
+      "empatia"
+    ],
+    "path": "university"
+  },
+  "day": 1,
+  "hour": 12,
+  "location": "casa",
+  "money": 120,
+  "stats": {
+    "energy": 67,
+    "mood": 77,
+    "health": 90,
+    "social": 47,
+    "knowledge": 40,
+    "charm": 35,
+    "responsibility": 49,
+    "stress": 20
+  },
+  "personality": {
+    "empathy": 65,
+    "confidence": 50,
+    "discipline": 52,
+    "creativity": 50,
+    "sociability": 50
+  },
+  "relationships": {
+    "madre": {
+      "friendship": 72,
+      "romance": 0,
+      "trust": 81,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 1,
+      "friendMilestone": false
+    },
+    "padre": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "hermana": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "hermano": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "tia": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "tio": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "prima": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "valentina": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "mateo": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "alex": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "sofia": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "diego": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "emma": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "leo": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "ines": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "gabriel": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    },
+    "nora": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false
+    }
+  },
+  "journal": [
+    {
+      "day": 1,
+      "hour": 12,
+      "title": "Estudiar un rato",
+      "text": "Avanza a tu ritmo con tus apuntes.",
+      "kind": "study"
+    },
+    {
+      "day": 1,
+      "hour": 10,
+      "title": "Estar presente · Clara",
+      "text": "Escuchas a Clara sin interrumpir ni dar consejos que no ha pedido. La confianza crece.",
+      "kind": "social"
+    },
+    {
+      "day": 1,
+      "hour": 9,
+      "title": "Una vida por escribir",
+      "text": "Llegas a tu nuevo comienzo con 120 € y muchas posibilidades. Tú decides qué relaciones y proyectos cuidar.",
+      "kind": "milestone"
+    }
+  ],
+  "counters": {
+    "social": 1,
+    "study": 1,
+    "work": 0,
+    "friend": 0,
+    "date": 0
+  },
+  "claimedGoals": [],
+  "flags": {
+    "cheats": false,
+    "cheatsUsed": false
+  },
+  "daily": {
+    "interactions": {
+      "madre": 1
+    },
+    "actions": {
+      "estudiar_casa": 1
+    },
+    "workHours": 0,
+    "gifts": {}
+  }
+}

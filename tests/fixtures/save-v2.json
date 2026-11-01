@@ -1,0 +1,1433 @@
+{
+  "version": 2,
+  "profile": {
+    "name": "Vera",
+    "lastName": "Rivera",
+    "age": 24,
+    "pronouns": "elle",
+    "gender": "nonbinary",
+    "skin": "#dca67d",
+    "hair": "#43332c",
+    "hairStyle": "curly",
+    "outfit": "#739486",
+    "traitIds": [],
+    "path": "university"
+  },
+  "day": 1,
+  "hour": 12,
+  "location": "casa",
+  "money": 120,
+  "stats": {
+    "energy": 67,
+    "mood": 76,
+    "health": 90,
+    "social": 47,
+    "knowledge": 40,
+    "charm": 35,
+    "responsibility": 49,
+    "stress": 20
+  },
+  "personality": {
+    "empathy": 53,
+    "confidence": 50,
+    "discipline": 52,
+    "creativity": 50,
+    "sociability": 50
+  },
+  "relationships": {
+    "madre": {
+      "friendship": 72,
+      "romance": 0,
+      "trust": 80,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 1,
+      "friendMilestone": false,
+      "sharedHistory": [
+        {
+          "day": 1,
+          "type": "listen",
+          "title": "Estar presente",
+          "text": "Escuchas a Clara sin interrumpir ni dar consejos que no ha pedido. La confianza crece."
+        }
+      ],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "padre": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "hermana": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "hermano": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "tia": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "tio": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "prima": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "valentina": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "mateo": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "alex": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "sofia": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "diego": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "emma": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "leo": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "ines": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "gabriel": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "nora": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "abuela_materna": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "abuelo_materno": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "abuela_paterna": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "abuelo_paterno": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "primo": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "prima_segunda": {
+      "friendship": 65,
+      "romance": 0,
+      "trust": 70,
+      "status": "family",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "jefa": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "colega_tomas": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "colega_sara": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "mentor": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "compa_abril": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "compa_bruno": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "uni_lara": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "uni_sam": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "celia": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "hugo": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "ren": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "mara": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "elias": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    },
+    "olivia": {
+      "friendship": 10,
+      "romance": 0,
+      "trust": 10,
+      "status": "acquaintance",
+      "dates": 0,
+      "boundary": false,
+      "lastMet": 0,
+      "friendMilestone": false,
+      "sharedHistory": [],
+      "conflict": 0,
+      "casual": {
+        "expectations": "unknown",
+        "attraction": 0,
+        "encounters": 0,
+        "lastEncounterDay": 0,
+        "history": []
+      }
+    }
+  },
+  "journal": [
+    {
+      "day": 1,
+      "hour": 12,
+      "title": "Estudiar un rato",
+      "text": "Avanza a tu ritmo con tus apuntes.",
+      "kind": "study",
+      "npcId": null,
+      "tags": [
+        "study"
+      ],
+      "eventId": null
+    },
+    {
+      "day": 1,
+      "hour": 10,
+      "title": "Estar presente · Clara",
+      "text": "Escuchas a Clara sin interrumpir ni dar consejos que no ha pedido. La confianza crece.",
+      "kind": "social",
+      "npcId": "madre",
+      "tags": [
+        "familia",
+        "listen"
+      ],
+      "eventId": null
+    },
+    {
+      "day": 1,
+      "hour": 9,
+      "title": "Una vida por escribir",
+      "text": "Llegas a tu nuevo comienzo con 120 € y muchas posibilidades. Tú decides qué relaciones y proyectos cuidar.",
+      "kind": "milestone",
+      "npcId": null,
+      "tags": [
+        "milestone"
+      ],
+      "eventId": null
+    }
+  ],
+  "counters": {
+    "social": 1,
+    "study": 1,
+    "work": 0,
+    "friend": 0,
+    "date": 0
+  },
+  "claimedGoals": [],
+  "flags": {
+    "cheats": false,
+    "cheatsUsed": false,
+    "storageNoticeSeen": false
+  },
+  "daily": {
+    "interactions": {
+      "madre": 1
+    },
+    "actions": {
+      "estudiar_casa": 1
+    },
+    "workHours": 0,
+    "gifts": {}
+  },
+  "savedAt": 1793492689428,
+  "rngState": 42,
+  "birthDay": 33,
+  "lifeStage": "juventud",
+  "narrative": {
+    "history": [],
+    "queue": [],
+    "pending": null,
+    "flags": {},
+    "recentTags": [],
+    "counts": {}
+  },
+  "messages": [],
+  "npcStates": {
+    "madre": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 62,
+      "needs": {
+        "support": 38,
+        "space": 53
+      },
+      "history": []
+    },
+    "padre": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "hermana": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "hermano": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "tia": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "tio": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "prima": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "valentina": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "mateo": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "alex": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "sofia": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "diego": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "emma": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "leo": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "ines": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "gabriel": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "nora": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "abuela_materna": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "abuelo_materno": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "abuela_paterna": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "abuelo_paterno": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "primo": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "prima_segunda": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "jefa": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "colega_tomas": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "colega_sara": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "mentor": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "compa_abril": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "compa_bruno": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "uni_lara": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "uni_sam": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "celia": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "hugo": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "ren": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "mara": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "elias": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    },
+    "olivia": {
+      "movedTo": null,
+      "awayUntil": 0,
+      "mood": 60,
+      "needs": {
+        "support": 50,
+        "space": 50
+      },
+      "history": []
+    }
+  },
+  "family": {
+    "support": 66,
+    "tension": 13,
+    "expenses": 0,
+    "children": []
+  },
+  "achievements": [],
+  "dayStart": {
+    "stats": {
+      "energy": 85,
+      "mood": 75,
+      "health": 90,
+      "social": 45,
+      "knowledge": 30,
+      "charm": 35,
+      "responsibility": 45,
+      "stress": 15
+    },
+    "money": 120,
+    "relationships": {
+      "madre": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "padre": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "hermana": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "hermano": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "tia": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "tio": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "prima": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "valentina": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "mateo": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "alex": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "sofia": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "diego": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "emma": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "leo": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "ines": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "gabriel": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "nora": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "abuela_materna": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "abuelo_materno": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "abuela_paterna": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "abuelo_paterno": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "primo": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "prima_segunda": {
+        "friendship": 65,
+        "trust": 70,
+        "romance": 0
+      },
+      "jefa": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "colega_tomas": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "colega_sara": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "mentor": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "compa_abril": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "compa_bruno": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "uni_lara": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "uni_sam": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "celia": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "hugo": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "ren": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "mara": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "elias": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      },
+      "olivia": {
+        "friendship": 10,
+        "trust": 10,
+        "romance": 0
+      }
+    },
+    "counters": {
+      "social": 0,
+      "study": 0,
+      "work": 0,
+      "friend": 0,
+      "date": 0
+    }
+  },
+  "ledger": {
+    "earned": 0,
+    "spent": 0,
+    "actions": [
+      {
+        "hour": 10,
+        "text": "Escuchas a Clara sin interrumpir ni dar consejos que no ha pedido. La confianza crece.",
+        "kind": "social"
+      },
+      {
+        "hour": 12,
+        "text": "Estudiar un rato: Avanza a tu ritmo con tus apuntes.",
+        "kind": "action"
+      }
+    ]
+  },
+  "summaries": [],
+  "career": {
+    "level": 0,
+    "experience": 0,
+    "promotions": [],
+    "lastRequestDay": 0
+  }
+}

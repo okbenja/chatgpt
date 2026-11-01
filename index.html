@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#193d36">
+  <meta name="description" content="Vínculos: un simulador de vida, decisiones y relaciones. Construye tu propia historia, a tu ritmo.">
+  <title>Vínculos — Tu vida, tus decisiones</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="data.js" defer></script>
+  <script src="systems.js" defer></script>
+  <script src="engine.js" defer></script>
+  <script src="narrative.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Navegación principal">
+      <a class="brand" href="#/hoy" aria-label="Vínculos, inicio"><span class="brand-symbol" aria-hidden="true">v.</span><span>vínculos<span class="brand-dot">.</span></span></a>
+      <div class="sidebar-tagline">SIMULADOR DE VIDA</div>
+      <div class="save-indicator"><span aria-hidden="true"></span><span id="save-status" role="status">Preparando tu partida…</span></div>
+      <div class="nav-caption">TU MUNDO</div>
+      <nav class="nav-list">
+        <button class="nav-item active" data-view="today"><span data-icon="sun"></span>Mi día<span class="nav-pip"></span></button>
+        <button class="nav-item" data-view="map"><span data-icon="map"></span>Explorar</button>
+        <button class="nav-item" data-view="people"><span data-icon="users"></span>Relaciones<span class="nav-count" id="relations-count">0</span></button>
+        <button class="nav-item" data-view="family"><span data-icon="home"></span>Mi familia</button>
+        <button class="nav-item" data-view="character"><span data-icon="sparkles"></span>Mi personaje</button>
+        <button class="nav-item" data-view="journal"><span data-icon="book"></span>Diario</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" id="settings-button"><span data-icon="settings"></span>Ajustes y ayuda</button>
+        <button class="sidebar-profile" id="edit-profile"><span id="sidebar-avatar" class="avatar"></span><span><strong id="sidebar-name">Tu personaje</strong><small id="sidebar-path">Escribe tu historia</small></span><span data-icon="chevron"></span></button>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Tu historia</span><span>/</span><strong id="breadcrumb-current">Mi día</strong></div>
+        <div class="topbar-right"><span class="day-pill" id="day-pill"></span><span class="wallet" title="Dinero disponible"><span data-icon="wallet"></span><strong id="money-amount">120 €</strong></span><button class="icon-button" id="settings-top-button" aria-label="Ajustes y ayuda"><span data-icon="settings"></span></button><button class="icon-button" id="help-button" aria-label="Cómo jugar"><span data-icon="help"></span></button></div>
+      </header>
+      <div class="content-layout">
+        <main id="main-content" tabindex="-1"></main>
+        <details class="right-panel-root" id="status-panel" open><summary>Estado y objetivos <span data-icon="chevron"></span></summary><aside class="right-panel" aria-label="Estado y objetivos">
+          <section class="panel wellbeing-panel"><div class="section-heading"><h2>¿Cómo estás?</h2><span class="tiny-label">EN ESTE MOMENTO</span></div><div id="stat-bars"></div><button class="text-button" id="all-stats">Ver todas las estadísticas <span data-icon="arrow"></span></button></section>
+          <section class="panel goals-panel"><div class="section-heading"><h2>Pequeños pasos</h2><span data-icon="flag"></span></div><p class="panel-subtitle">Las grandes historias empiezan aquí.</p><div id="goals-list"></div></section>
+          <button class="end-day-button" id="sleep-button"><span data-icon="moon"></span><span>Terminar el día<small>Descansa y vuelve a empezar</small></span><span data-icon="arrow"></span></button>
+        </aside></details>
+      </div>
+      <footer class="app-footer"><span>Guardado local · Juego sin conexión</span><span>VÍNCULOS <span id="cheat-indicator" hidden> · TRUCOS ACTIVOS</span></span></footer>
+    </div>
+  </div>
+
+  <dialog id="game-dialog" class="game-dialog" aria-label="Vínculos" aria-labelledby="dialog-title"><div id="dialog-content"></div><button class="dialog-close icon-button" id="close-dialog" aria-label="Cerrar ventana"><span data-icon="close"></span></button></dialog>
+  <div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="true"></div>
+  <noscript><div class="noscript-notice">Activa JavaScript para jugar a Vínculos. No se necesita conexión a Internet.</div></noscript>
+</body>
+</html>
