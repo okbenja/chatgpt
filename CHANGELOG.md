@@ -50,3 +50,5 @@
 - La habilitación de Pages y la comprobación remota son independientes de estos resultados locales. El entorno necesita acceso a api.github.com y okbenja.github.io; el borrador de red conserva los presets y añade solo esos dominios.
 
 - Ajuste de CI: Ubuntu24.04 para la versión fijada de Playwright, diagnóstico visible de preparación del navegador y compatibilidad con Pages ya publicado desde una rama. Las comprobaciones siguen siendo obligatorias.
+
+- El libro distingue vidas diferentes aunque repitan nombre y tipo de cierre. Revisar un cierre actualiza solo el registro de esa vida; una prueba recorre tres vidas y una revisión posterior.

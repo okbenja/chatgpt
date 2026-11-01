@@ -119,10 +119,11 @@
     if(s.direction.legacy.reached&&!check.available)return {ok:true,message:'Puedes revisar el cierre que ya guardaste. Habrá otra revisión cuando recuperes margen.'};
     if(!check.available)return fail('Este cierre todavía no está listo. '+check.reasons.join(' '));
     if(s.direction.legacy.reached&&s.direction.legacy.day===s.day)return {ok:true,message:'Puedes revisar el legado guardado y seguir viviendo.'};
+    const previousText=s.direction.legacy.reached?s.direction.legacy.text.slice(0,1600):null;
     const portrait=legacyPortrait(g);
     s.direction.legacy={...portrait,reached:true,day:s.day,snapshots:[...s.direction.legacy.snapshots,{day:s.day,text:portrait.text}].slice(-6)};
     const item={id:`${s.profile.name}:${s.savedAt||0}:${s.day}`,name:s.profile.name,day:s.day,type:portrait.type,title:portrait.title,text:portrait.text.slice(0,1600)};
-    const old=s.direction.book.find(x=>x.name===item.name&&x.type===item.type);
+    const old=previousText?s.direction.book.slice().reverse().find(x=>x.name===item.name&&x.text===previousText):null;
     if(old)Object.assign(old,item);else s.direction.book.push(item);
     s.direction.book=s.direction.book.slice(-12);
     try{g.storage?.setItem('vinculos-book-v1',JSON.stringify(s.direction.book));}catch{/* La exportación conserva el libro aunque falle la copia separada. */}
