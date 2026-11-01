@@ -1,0 +1,15 @@
+'use strict';
+const fs=require('node:fs'),assert=require('node:assert/strict');global.window=global;require('../data.js');
+const D=VINCULOS_DATA,events=new Map(D.events.map(e=>[e.id,e])),duplicates=[],equivalent=[],broken=[],incoming=new Set(),texts=new Map();
+const stable=v=>Array.isArray(v)?v.map(stable):v&&typeof v==='object'?Object.fromEntries(Object.entries(v).sort(([a],[b])=>a.localeCompare(b)).map(([k,x])=>[k,stable(x)])):v;
+function signature(o){return JSON.stringify(stable({duration:o.duration??.5,cost:o.cost||0,energy:o.energyCost||0,requirements:o.requirements||{},results:o.results.map(r=>({weight:r.weight||1,conditions:r.conditions||{},modifiers:r.modifiers||[],effects:r.effects||{},next:r.next||null}))}));}
+for(const e of D.events){const key=e.text;if(texts.has(key))duplicates.push([texts.get(key),e.id]);else texts.set(key,e.id);const signatures=new Map();for(const o of e.options){const s=signature(o);if(signatures.has(s))equivalent.push({event:e.id,a:signatures.get(s),b:o.id});else signatures.set(s,o.id);for(const r of o.results)if(r.next){incoming.add(r.next.eventId);if(!events.has(r.next.eventId))broken.push({event:e.id,target:r.next.eventId});}}
+ for(const [field,catalog]of Object.entries({locations:D.locations,jobs:D.jobs,housing:D.housing,aspirations:D.aspirations,scenarios:D.startScenarios||[]}))for(const id of e.conditions?.[field]||[])if(!catalog.some(x=>x.id===id))broken.push({event:e.id,field,id});
+ if(!e.options.length||!e.options.some(o=>(o.cost||0)===0))broken.push({event:e.id,reason:'Sin salida gratuita'});
+}
+const reachable=new Set(D.events.filter(e=>!e.chainOnly||e.trigger==='infidelity').map(e=>e.id));let changed=true;while(changed){changed=false;for(const id of [...reachable])for(const o of events.get(id).options)for(const r of o.results)if(r.next&&!reachable.has(r.next.eventId)){reachable.add(r.next.eventId);changed=true;}}
+const unreachable=D.events.filter(e=>!reachable.has(e.id)).map(e=>e.id),unusedFunctions=[];
+const files=['app.js','engine.js','systems.js','narrative.js','data.js'];const source=files.map(f=>fs.readFileSync(require('node:path').join(__dirname,'..',f),'utf8')).join('\n');
+for(const f of files){const s=fs.readFileSync(require('node:path').join(__dirname,'..',f),'utf8');for(const m of s.matchAll(/\bfunction\s+(\w+)\s*\(/g)){if((source.match(new RegExp('\\b'+m[1]+'\\b','g'))||[]).length===1)unusedFunctions.push({file:f,name:m[1],note:'Candidato estático: revisar exportaciones o llamadas dinámicas antes de eliminar.'});}}
+const report={events:D.events.length,options:D.events.reduce((n,e)=>n+e.options.length,0),duplicateIds:D.events.length-events.size,duplicateBaseTexts:duplicates,equivalentOptions:equivalent,brokenReferences:broken,unreachableFromAnyRoot:unreachable,unusedFunctionCandidates:unusedFunctions};
+fs.writeFileSync('/tmp/vinculos-v4-catalog-audit.json',JSON.stringify(report,null,2));assert.equal(report.duplicateIds,0);assert.deepEqual(broken,[]);assert.deepEqual(unreachable,[]);assert.deepEqual(equivalent,[]);console.log(JSON.stringify(report,null,2));

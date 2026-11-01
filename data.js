@@ -1098,3 +1098,15 @@ window.VINCULOS_DATA = {
     {id:'limite',text:'Proponer otro día y descansar; aceptar la decepción',duration:1,results:[{id:'pausa',weight:1,quality:'negative',text:'No todo el mundo recibe bien el cambio. Aun así, poner un límite deja espacio para recuperarte.',effects:{stats:{energy:12,stress:-10},relationships:{valentina:{friendship:-2}}}}]}
   ]});
 })(window.VINCULOS_DATA);
+
+(function(d){
+  d.contentSettings=[
+    {id:'nightlife',label:'Vida nocturna',description:'Discoteca, bar y eventos de ocio nocturno. El resto de la ciudad sigue disponible.'},
+    {id:'romance',label:'Relaciones románticas',description:'Coqueteo, citas, pareja e historias románticas entre personas adultas. Desactivarlo no borra vínculos existentes.'},
+    {id:'casual',label:'Encuentros casuales',description:'Ligue y encuentros de una noche con consentimiento explícito y narración fuera de pantalla.'}
+  ];
+  for(const e of d.events){const tags=e.tags||[];e.content={...(e.content||{})};if(tags.some(t=>['pareja','infidelidad','romance'].includes(t)))e.content.romance=true;if(tags.includes('noche'))e.content.nightlife=true;if(tags.includes('encuentro_casual')||e.id.startsWith('noche_')&&!['noche_presupuesto','noche_plan_regreso'].includes(e.id))e.content.casual=true;}
+})(window.VINCULOS_DATA);
+
+// Esta cadena se abre por una decisión explícita en engine.js, no por sorteo.
+window.VINCULOS_DATA.events.find(e=>e.id==='secreto_pesa').trigger='infidelity';

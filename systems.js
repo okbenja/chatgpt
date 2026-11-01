@@ -16,6 +16,11 @@
     s.life={economy:{savings:0,debt:0,creditLimit:250,lastBilledDay:Math.max(0,s.day-1),transactions:[],weeks:[]},employment:{jobId:s.profile.path==='work'?'nexo':'none',status:s.profile.path==='work'?'employed':'unemployed',performance:60,lastWorkedDay:0,missedShifts:0},skills:Object.fromEntries(defs(g).skills.map(k=>[k.id,{xp:0,lastPracticeDay:0}])),home:{type:'familiar',roommateId:'hermana',upgrades:[],lastMoveDay:0},pet:null,world:{weather:'despejado',news:[],lastUpdatedDay:s.day},annual:{},wellbeing:{nutrition:65,movement:50,rest:75,illness:0},history:[]};
     for(const a of defs(g).aspirations)s.direction.progress[a.id]={stage:0};
     if(input.version>=3){validate(g,input);s.aspirations=clone(input.aspirations);s.direction=clone(input.direction);s.life=clone(input.life);s.life.annual=s.life.annual||{};}
+    const settings=s.direction.settings;
+    for(const key of ['nightlife','romance','casual','showAllSystems']) {
+      if(settings[key]!==undefined&&typeof settings[key]!=='boolean')throw Error('Ajuste de contenido inválido');
+      if(settings[key]===undefined)settings[key]=key!=='showAllSystems';
+    }
     const book=input.version===4?input.direction.book:input.book||[];
     if(!Array.isArray(book)||book.length>12||book.some(x=>!x||typeof x.text!=='string'||x.text.length>1600||typeof x.title!=='string'||typeof x.name!=='string'||!finite(x.day)))throw Error('Libro inválido');
     s.direction.book=clone(book);
@@ -252,7 +257,7 @@
     if(s.stats.stress>55)g._effects({energy:-Math.ceil((s.stats.stress-55)/4),mood:-2});
     if(s.day>=p.nextCrisisDay&&p.expenses.length<3) {
       const kind=defs(g).expenseCatalog[Math.floor(g.random()*defs(g).expenseCatalog.length)];
-      const bill={kind:kind.id,amount:Math.round(kind.amount*rules.expenseFactor),day:s.day,dueDay:s.day+7};
+      const bill={kind:kind.id,amount:Math.round(kind.amount*rules.expenseFactor*(p.crises===0&&s.direction.settings.difficulty!=='tranquila'?5:1)),day:s.day,dueDay:s.day+7};
       p.expenses.push(bill);p.crises++;p.load=cap(p.load+10*rules.loadFactor);
       p.nextCrisisDay=s.day+rules.minDays+Math.floor(g.random()*(rules.maxDays-rules.minDays+1));
       g._journal(kind.title,`${kind.text} El presupuesto es ${bill.amount} €. Tienes siete días para acordar una salida.`,'pressure',{tags:['economía','decision']});

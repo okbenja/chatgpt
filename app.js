@@ -53,6 +53,7 @@
   if (!hadSave) game.create({...defaultProfile, traitIds:window.VINCULOS_DATA.traits.slice(0,2).map(t=>t.id)});
   game.autosaveDeferred=true;
   window.addEventListener('pagehide',()=>{if(game.savePending)game.flushSave();});
+  window.addEventListener('vinculos:save-pending',()=>updateSaveStatus());
   window.addEventListener('vinculos:saved',()=>{updateSaveStatus();if(!game.lastSaveSucceeded&&!$('#persistent-save-error'))main.insertAdjacentHTML('afterbegin','<div id="persistent-save-error" class="notice" role="alert">No se pudo guardar. Tu sesión sigue abierta. <button class="button secondary" id="export-save">Exportar ahora</button></div>');});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.savePending)game.flushSave();});
   const data = window.VINCULOS_DATA;
@@ -295,7 +296,7 @@
   }
   function renderV3Settings() {
     const settings=game.state.direction.settings;
-    return `<section class="settings-section"><h3>El ritmo de tu historia</h3><label class="form-field">Dificultad<select id="settings-difficulty">${data.difficulties.map(d=>`<option value="${d.id}" ${settings.difficulty===d.id?'selected':''}>${escape(d.label)} · ${escape(d.description)}</option>`).join('')}</select></label><button class="text-button" id="tutorial-restart">Repetir la introducción interactiva</button></section><section class="settings-section sound-controls"><h3>Ambiente sonoro</h3><p>Sonido sintetizado en este dispositivo, sin archivos ni conexión. Apagado por defecto; nunca se inicia al recargar sin que lo pidas.</p><label class="toggle-row"><span>Activar ambiente</span><input id="sound-toggle" type="checkbox" ${settings.audioEnabled?'checked':''}></label><label class="form-field">Volumen<input id="sound-volume" type="range" min="0" max="1" step="0.01" value="${settings.volume}"></label><button class="button secondary" id="sound-play">Reanudar sonido</button><p class="sound-status" role="status"></p></section>`;
+    return `<section class="settings-section"><h3>Contenido de tu historia</h3>${data.contentSettings.map(item=>`<label class="toggle-row"><span><strong>${escape(item.label)}</strong><small>${escape(item.description)}</small></span><input type="checkbox" data-content-setting="${item.id}" ${settings[item.id]?'checked':''}></label>`).join('')}</section><section class="settings-section"><h3>El ritmo de tu historia</h3><label class="form-field">Dificultad<select id="settings-difficulty">${data.difficulties.map(d=>`<option value="${d.id}" ${settings.difficulty===d.id?'selected':''}>${escape(d.label)} · ${escape(d.description)}</option>`).join('')}</select></label><button class="text-button" id="tutorial-restart">Repetir la introducción interactiva</button></section><section class="settings-section sound-controls"><h3>Ambiente sonoro</h3><p>Sonido sintetizado en este dispositivo, sin archivos ni conexión. Apagado por defecto; nunca se inicia al recargar sin que lo pidas.</p><label class="toggle-row"><span>Activar ambiente</span><input id="sound-toggle" type="checkbox" ${settings.audioEnabled?'checked':''}></label><label class="form-field">Volumen<input id="sound-volume" type="range" min="0" max="1" step="0.01" value="${settings.volume}"></label><button class="button secondary" id="sound-play">Reanudar sonido</button><p class="sound-status" role="status"></p></section>`;
   }
   async function syncAudio(gesture) {
     const settings=game.state.direction.settings;
@@ -683,6 +684,7 @@
     }
   });
   document.addEventListener('change', async event=>{
+    if(event.target.dataset.contentSetting){run(game.setPreferences({[event.target.dataset.contentSetting]:event.target.checked}));}
     if(event.target.id==='settings-difficulty'){run(game.setDifficulty(event.target.value));}
     if(event.target.id==='sound-toggle'){game.setPreferences({audioEnabled:event.target.checked});syncAudio(true);}
     if(event.target.id==='sound-volume'){game.setPreferences({volume:Number(event.target.value)});if(ambienceGain)ambienceGain.gain.setTargetAtTime(Number(event.target.value)*.06,audioContext.currentTime,.1);}

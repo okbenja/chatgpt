@@ -168,6 +168,7 @@
     }
 
     applyEffects(effects = {}) {
+      for(const [id,c] of Object.entries(effects.relationships||{})){const target=id==='$partner'?this.data.npcs.find(n=>this.getRelationship(n.id).status==='partner')?.id:id==='$affair'?this.state.narrative.flags.affair_target:id,n=this.getNPC(target);if(n&&(n.age<18||n.family||n.child)&&c.romance)return fail('Ese vínculo no admite contenido romántico.');}
       this._effects({ ...effects.stats, ...(finite(effects.money) ? { money: effects.money } : {}) });
       for (const [id, changes] of Object.entries(effects.relationships || {})) { const target=id==='$partner'?this.data.npcs.find(n=>this.getRelationship(n.id).status==='partner')?.id:id==='$affair'?this.state.narrative.flags.affair_target:id;const npc = this.getNPC(target); if (npc) this._updateRelationship(npc, changes); }
       if(effects.breakupPartner){for(const n of this.data.npcs){const r=this.getRelationship(n.id);if(r.status==='partner'){r.status=r.friendship>=40?'friend':'acquaintance';r.romance=0;r.dates=0;}}}
@@ -204,7 +205,7 @@
     getTutorial(){return {...this.state.direction?.tutorial,steps:this.data.tutorialSteps||[]};}
     tutorialAction(action){return this._system('tutorial',[action]);}
     setDifficulty(id){if(!this.data.difficulties?.some(d=>d.id===id))return fail('Elige una dificultad válida.');this.state.direction.settings.difficulty=id;return this._success('Has ajustado el ritmo de la partida.');}
-    setPreferences(input){if(!input||typeof input!=='object'||Object.keys(input).some(k=>!['audioEnabled','volume'].includes(k))||input.volume!==undefined&&(!finite(input.volume)||input.volume<0||input.volume>1)||input.audioEnabled!==undefined&&typeof input.audioEnabled!=='boolean')return fail('Los ajustes no son válidos.');Object.assign(this.state.direction.settings,input);this.save();return {ok:true,message:'Preferencias guardadas.'};}
+    setPreferences(input){if(!input||typeof input!=='object'||Object.keys(input).some(k=>!['audioEnabled','volume','nightlife','romance','casual','showAllSystems'].includes(k))||input.volume!==undefined&&(!finite(input.volume)||input.volume<0||input.volume>1)||['audioEnabled','nightlife','romance','casual','showAllSystems'].some(k=>input[k]!==undefined&&typeof input[k]!=='boolean'))return fail('Los ajustes no son válidos.');Object.assign(this.state.direction.settings,input);this.save();return {ok:true,message:'Preferencias guardadas.'};}
     getTrends(){return this.state.life?.history||[];}
 
     _narrativeCall(method, args = []) { const module = root.Vinculos && root.Vinculos.Narrative; return module && typeof module[method] === 'function' ? module[method](this, ...args) : method === 'getPendingEvent' ? null : fail('No hay un evento disponible.'); }
@@ -266,6 +267,7 @@
     save(immediate = false) {
       if(this.autosaveDeferred && !immediate && this.state && !this.corruptSave && this._legacyMigrationText===null) {
         this.savePending=true;
+        if(typeof root.dispatchEvent==='function')root.dispatchEvent(new Event('vinculos:save-pending'));
         if(!this._saveTimer){const flush=()=>{this._saveTimer=null;this.save(true);if(typeof root.dispatchEvent==='function')root.dispatchEvent(new Event('vinculos:saved'));};
           this._saveTimer=typeof root.requestIdleCallback==='function'?root.requestIdleCallback(flush,{timeout:300}):setTimeout(flush,100);
           this._saveTimerIdle=typeof root.requestIdleCallback==='function';}
@@ -347,6 +349,7 @@
     getRelationship(id) { return this.state && this.state.relationships[id] || null; }
     getLocationAvailability(id, hour = this.state ? this.state.hour : 9) {
       const place = this.data.locations.find(location => location.id === id);
+      if(this.state?.direction?.settings.nightlife===false&&['bar','discoteca'].includes(id))return {open:false,reason:'La vida nocturna está desactivada en Ajustes.',opensAt:18,closesAt:23};
       if (!place) return { open: false, reason: 'Ese lugar no existe.', opensAt: 9, closesAt: 23 };
       const opensAt = finite(place.opensAt) ? place.opensAt : 9;
       const closesAt = finite(place.closesAt) ? place.closesAt : 23;
@@ -526,6 +529,7 @@
         if (finite(changes[key])) relationship[key] = Math.round(clamp(relationship[key] + changes[key]));
       }
       if (npc.family) { relationship.romance = 0; relationship.status = 'family'; }
+      else if(npc.age<18){relationship.romance=0;if(['dating','partner'].includes(relationship.status))relationship.status='acquaintance';}
       else if (!['dating', 'partner'].includes(relationship.status)) {
         if (relationship.friendship < 15 && relationship.trust < 15 && (changes.friendship < 0 || changes.trust < 0 || relationship.status === 'rival')) relationship.status = 'rival';
         else if (relationship.friendship >= 40) relationship.status = 'friend';
@@ -566,6 +570,7 @@
       const romantic = ['flirt', 'askDate', 'date', 'relationship'].includes(type);
       const committed=this.data.npcs.find(n=>n.id!==npcId && this.getRelationship(n.id).status==='partner');
       if(romantic && committed && !npc.family && option?.allowInfidelity!==true)return {ok:false,message:`Tienes un acuerdo exclusivo con ${committed.name}. Continuar sería una infidelidad.`,requiresInfidelityConfirmation:true,partnerId:committed.id};
+      if(romantic&&this.state.direction?.settings.romance===false)return fail('El contenido romántico está desactivado en Ajustes.');
       if (romantic && (npc.family || npc.available === false || npc.age < 18)) return fail(npc.family ? 'Los vínculos familiares se cuidan desde el cariño y el respeto.' : `${npc.name} no está buscando una relación romántica. Puedes cultivar una amistad.`);
       if (romantic && rel.boundary) return fail(`Habéis acordado mantener una amistad con ${npc.name}. Respeta ese límite.`);
       if (!['boundary', 'breakup'].includes(type) && !this.getPresentNPCs().some(person => person.id === npcId)) return fail(`${npc.name} no está aquí ahora. Consulta sus lugares habituales y busca otro momento.`);
@@ -824,6 +829,8 @@
     _nightCheck(npcId, action) {
       if (!this.state) return fail('Crea tu personaje para comenzar.');
       const npc = this.getNPC(npcId), rel = this.getRelationship(npcId);
+      if(this.state.direction?.settings.nightlife===false)return fail('La vida nocturna está desactivada en Ajustes.');
+      if(this.state.direction?.settings.casual===false&&!['declineCasual','sayGoodbye','offerDrink','danceTogether'].includes(action.id))return fail('Los encuentros casuales están desactivados en Ajustes.');
       if (!npc || !rel) return fail('No encuentras a esa persona.');
       if (npc.family || npc.child || npc.age < 18 || npc.available === false) return fail('Los encuentros casuales solo se proponen a otras personas adultas y disponibles.');
       const blocked = this._eventBlock(); if (blocked) return blocked;

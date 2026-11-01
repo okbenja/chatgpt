@@ -6,7 +6,7 @@
   const own = (object, key) => Object.prototype.hasOwnProperty.call(object || {}, key);
   const fail = message => ({ ok: false, message });
   const cleanSeason = season => String(season || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const resolveNPCId = (game, id) => ['$partner', 'partner', 'pareja'].includes(id) ? Object.keys(game.state.relationships).find(key => game.state.relationships[key].status === 'partner') || null : id;
+  const resolveNPCId = (game, id) => id==='$affair'?game.state.narrative.flags.affair_target||null:['$partner', 'partner', 'pareja'].includes(id) ? Object.keys(game.state.relationships).find(key => game.state.relationships[key].status === 'partner') || null : id;
 
   function story(game) {
     const state = game.state;
@@ -122,6 +122,14 @@
     return candidates[candidates.length - 1];
   }
 
+  function contentAllowed(game,event,npcId) {
+    const settings=game.state.direction?.settings||{};
+    if(Object.entries(event.content||{}).some(([key,enabled])=>enabled&&settings[key]===false))return false;
+    const intimate=event.content?.romance||event.content?.casual;
+    const person=game.getNPC(npcId||resolveNPCId(game,event.npcId));
+    if(intimate&&person&&(person.age<18||person.family||person.child))return false;
+    return event.options.every(o=>o.results.every(r=>Object.entries(r.effects?.relationships||{}).every(([id,c])=>{const n=game.getNPC(resolveNPCId(game,id));return !c.romance||!n||!n.family&&!n.child&&n.age>=18;})));
+  }
   function getEventWeights(game) {
     if (!game.state) return [];
     const memory = story(game);
@@ -130,6 +138,7 @@
       const seen = occurrence(memory, event.id);
       const check = requirements(game, event.conditions);
       let reason = check.reason;
+      if(!contentAllowed(game,event))reason='Este contenido no está disponible con tus ajustes o con esta persona.';
       if (!reason && event.chainOnly) reason = 'Solo se abre como continuación de una decisión.';
       if (!reason && event.maxOccurrences && seen.count >= event.maxOccurrences) reason = 'Esta historia ya ha terminado en esta partida.';
       if (!reason && seen.count && game.state.day - seen.lastDay < (event.cooldown || 0)) reason = 'Está dentro de su periodo de descanso.';
@@ -162,7 +171,7 @@
     });
     const due = memory.queue.find(item => {
       const event = findEvent(game, item.eventId), seen = occurrence(memory, event.id);
-      return item.dueDay <= game.state.day && (!seen.count || game.state.day - seen.lastDay >= (event.cooldown || 0)) && requirements(game, event.conditions).ok;
+      return item.dueDay <= game.state.day && (!seen.count || game.state.day - seen.lastDay >= (event.cooldown || 0)) && requirements(game, event.conditions).ok && contentAllowed(game,event,item.npcId);
     });
     if (due) {
       const event = findEvent(game, due.eventId);
@@ -204,7 +213,7 @@
     if (!game.state || !game.state.narrative || !game.state.narrative.pending) return null;
     const pending = game.state.narrative.pending;
     const event = findEvent(game, typeof pending === 'string' ? pending : pending.eventId);
-    if (!event) return null;
+    if (!event||!contentAllowed(game,event,pending.npcId)) return null;
     const npcId = pending.npcId || event.npcId;
     const variants = [event.text, ...(event.variants || [])];
     return { id: event.id, title: interpolate(game, event.title, npcId), text: interpolate(game, variants[(pending.variantIndex || 0) % variants.length], npcId), tags: event.tags || [], mandatory: !!event.mandatory, npcId, options: event.options.map(option => {
@@ -309,6 +318,7 @@
     if (!game.state?.flags.cheats) return fail('Activa los trucos para usar la depuración narrativa.');
     const event = findEvent(game, id);
     if (!event) return fail('No existe ese evento.');
+    if(!contentAllowed(game,event))return fail('Ese contenido no está disponible con tus ajustes.');
     game.state.flags.cheatsUsed = true;
     story(game).pending = pendingFrom(game, event, { kind: 'debug' });
     game.save();
@@ -432,7 +442,7 @@
     return report;
   }
 
-  const api = { maybeQueue, getPendingEvent, chooseEvent, getEventWeights, forceEvent, deferEvent, simulateDays, evaluateRequirements: requirements, resultWeight };
+  const api = { contentAllowed,maybeQueue, getPendingEvent, chooseEvent, getEventWeights, forceEvent, deferEvent, simulateDays, evaluateRequirements: requirements, resultWeight };
   root.Vinculos = root.Vinculos || {};
   root.Vinculos.Narrative = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
