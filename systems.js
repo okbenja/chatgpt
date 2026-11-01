@@ -22,6 +22,13 @@
     const inheritance=input.version===4?input.direction.inheritance:input.inheritance||null;
     if(inheritance!==null&&(!inheritance||inheritance.kind!=='carta'||typeof inheritance.from!=='string'||typeof inheritance.text!=='string'||inheritance.text.length>1000))throw Error('Herencia inválida');
     s.direction.inheritance=clone(inheritance);
+    const archive=input.version===4?input.life.archive:null;
+    if(archive!==null&&archive!==undefined&&(!archive||!Array.isArray(archive.months)||archive.months.length>120||archive.months.some(m=>!Number.isInteger(m.month)||m.month<1||!finite(m.days)||m.days>30||!finite(m.earned)||!finite(m.spent)||!Array.isArray(m.notes)||m.notes.length>3||m.notes.some(t=>typeof t!=='string'||t.length>180))))throw Error('Archivo mensual inválido');
+    s.life.archive=archive?clone(archive):{months:[]};
+    if(input.version===3) {
+      for(const summary of s.summaries)archiveSummary(s,summary);
+      compactState(s);
+    }
     hydratePressure(g,s,input);
     s.lifeStage=stage(g,s);
     return s;
@@ -198,11 +205,11 @@
     l.lastWarning=warning;
     l.history.push({day:s.day,money:s.money,mood:s.stats.mood,relationships:mean(g),energy:s.stats.energy});l.history=l.history.slice(-1200);
   }
-  function newDay(g){const s=g.state,l=s.life;pressureMorning(g);const recoveryPenalty=Math.round((defs(g).lifeStages.find(x=>x.id===stage(g)).energyFactor-1)*50);if(recoveryPenalty)g._effects({energy:-recoveryPenalty});l.world.weather=defs(g).weathers[Math.floor(g.random()*defs(g).weathers.length)].id;l.world.news=l.world.news.filter(n=>n.endDay>s.day);if(l.world.news.length<2&&g.random()<.12*difficulty(g).riskFactor){const n=defs(g).worldNews[Math.floor(g.random()*defs(g).worldNews.length)];if(!l.world.news.some(x=>x.id===n.id)){l.world.news.push({id:n.id,startDay:s.day,endDay:s.day+n.days});g._journal(n.title,n.text,'world',{tags:['barrio']});}}l.world.lastUpdatedDay=s.day;for(const k of Object.values(l.skills))if(s.day-k.lastPracticeDay>10)k.xp=Math.max(0,k.xp-.08);if(l.pet){l.pet.care=cap(l.pet.care-9);if(l.pet.care>60)g._effects({mood:2});}for(const id of l.home.upgrades)g._effects(defs(g).homeUpgrades.find(x=>x.id===id).effects);if(l.wellbeing.illness>60)g._effects({energy:-8,health:-2});const j=l.employment;if(j.jobId!=='none'&&j.status==='employed'&&s.day-j.lastWorkedDay>7&&!g.isWeekend()){j.performance=cap(j.performance-4*difficulty(g).riskFactor);if(j.performance<15){j.status='unemployed';g._journal('Un trabajo termina','El contrato termina tras varias ausencias. Puedes buscar otro empleo, formarte o aceptar encargos mientras decides.','work',{tags:['trabajo']});}}}
+  function newDay(g){const s=g.state,l=s.life;compactState(s);pressureMorning(g);const recoveryPenalty=Math.round((defs(g).lifeStages.find(x=>x.id===stage(g)).energyFactor-1)*50);if(recoveryPenalty)g._effects({energy:-recoveryPenalty});l.world.weather=defs(g).weathers[Math.floor(g.random()*defs(g).weathers.length)].id;l.world.news=l.world.news.filter(n=>n.endDay>s.day);if(l.world.news.length<2&&g.random()<.12*difficulty(g).riskFactor){const n=defs(g).worldNews[Math.floor(g.random()*defs(g).worldNews.length)];if(!l.world.news.some(x=>x.id===n.id)){l.world.news.push({id:n.id,startDay:s.day,endDay:s.day+n.days});g._journal(n.title,n.text,'world',{tags:['barrio']});}}l.world.lastUpdatedDay=s.day;for(const k of Object.values(l.skills))if(s.day-k.lastPracticeDay>10)k.xp=Math.max(0,k.xp-.08);if(l.pet){l.pet.care=cap(l.pet.care-9);if(l.pet.care>60)g._effects({mood:2});}for(const id of l.home.upgrades)g._effects(defs(g).homeUpgrades.find(x=>x.id===id).effects);if(l.wellbeing.illness>60)g._effects({energy:-8,health:-2});const j=l.employment;if(j.jobId!=='none'&&j.status==='employed'&&s.day-j.lastWorkedDay>7&&!g.isWeekend()){j.performance=cap(j.performance-4*difficulty(g).riskFactor);if(j.performance<15){j.status='unemployed';g._journal('Un trabajo termina','El contrato termina tras varias ausencias. Puedes buscar otro empleo, formarte o aceptar encargos mientras decides.','work',{tags:['trabajo']});}}}
   function availability(g,id,base){if(!base.open||id==='casa')return base;const w=defs(g).weathers.find(w=>w.id===g.state.life.world.weather);const closed=(w.closed||[]).includes(id)||g.state.life.world.news.some(n=>(defs(g).worldNews.find(x=>x.id===n.id).closed||[]).includes(id));return closed?{...base,open:false,reason:'Este lugar está cerrado temporalmente por el clima o las noticias del barrio.'}:base;}
   function applyEffects(g,e){for(const [id,xp] of Object.entries(e.skills||{}))if(g.state.life.skills[id]&&finite(xp)){const k=g.state.life.skills[id];k.xp=cap(k.xp+xp);k.lastPracticeDay=g.state.day;}if(e.performance)g.state.life.employment.performance=cap(g.state.life.employment.performance+e.performance);}
   function get(g,name){const s=g.state,l=s.life;if(name==='travel')return 2+defs(g).weathers.find(w=>w.id===l.world.weather).energyExtra+l.world.news.reduce((n,x)=>n+(defs(g).worldNews.find(z=>z.id===x.id).energyExtra||0),0);if(name==='economy'){const h=defs(g).housing.find(h=>h.id===l.home.type);return {...l.economy,weekly:l.economy.weeks.at(-1)||{income:0,expenses:0,interest:0},upcomingExpenses:Math.round((h.weeklyRent+20+(l.pet?defs(g).pets.find(p=>p.id===l.pet.kind).weeklyCost:0))*difficulty(g).costFactor*l.world.news.reduce((factor,n)=>factor*(defs(g).worldNews.find(x=>x.id===n.id).costFactor||1),1))};}if(name==='employment'){const j=defs(g).jobs.find(j=>j.id===l.employment.jobId);return {...l.employment,title:j?.label||'Entre trabajos',level:s.career.level,salary:j?Math.round(j.basePay*(1+s.career.level*.18)):0,schedule:j?`${j.start}:00–${j.end}:00`:'A tu ritmo',...j};}if(name==='skills')return defs(g).skills.map(k=>({...k,value:l.skills[k.id].xp}));if(name==='home')return {...defs(g).housing.find(h=>h.id===l.home.type),...l.home,housingId:l.home.type};if(name==='pet')return l.pet;if(name==='world')return {...l.world,weather:defs(g).weathers.find(w=>w.id===l.world.weather),news:l.world.news.map(n=>({...defs(g).worldNews.find(x=>x.id===n.id),...n}))};return null;}
-  function afterSummary(g,summary){const key=String(summary.year),a=g.state.life.annual[key] || {days:0,earned:0,spent:0,events:0};a.days++;a.earned+=summary.earned;a.spent+=summary.spent;a.events+=g.state.narrative.history.filter(h=>h.day===summary.day).length;g.state.life.annual[key]=a;}
+  function afterSummary(g,summary){archiveSummary(g.state,summary);const key=String(summary.year),a=g.state.life.annual[key] || {days:0,earned:0,spent:0,events:0};a.days++;a.earned+=summary.earned;a.spent+=summary.spent;a.events+=g.state.narrative.history.filter(h=>h.day===summary.day).length;g.state.life.annual[key]=a;}
   // V4: obligaciones que sobreviven al descanso y salidas con un coste visible.
   function hydratePressure(g,s,input) {
     const saved=input.version===4?input.life?.pressure:null;
@@ -278,7 +285,32 @@
     p.history.push({day:s.day,text});p.history=p.history.slice(-60);transaction(g,-cost,'extraordinary');g._journal('Una salida posible',text,'pressure',{tags:['economía','decision']});
     return g._success(text,{kind:'system',actionId:type});
   }
-  const api={legacyText,legacySVG,newLife,afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
+  function archiveSummary(s,summary) {
+    const month=Math.floor((summary.day-1)/30)+1,list=s.life.archive.months;
+    let row=list.find(m=>m.month===month);
+    if(!row){row={month,days:0,earned:0,spent:0,notes:[]};list.push(row);}
+    row.days++;row.earned+=summary.earned;row.spent+=summary.spent;
+    if(summary.highlight&&!row.notes.includes(summary.highlight.slice(0,180)))row.notes.push(summary.highlight.slice(0,180));
+    row.notes=row.notes.slice(-3);s.life.archive.months=list.slice(-120);
+  }
+  function compactState(s) {
+    // Totales mensuales conservan la historia; los detalles recientes son una ventana.
+    const seen=new Set();
+    s.journal=s.journal.filter(j=>{if(j.kind==='summary')return false;const key=j.day+':'+j.title+':'+j.text;if(seen.has(key))return false;seen.add(key);return true;}).slice(0,180);
+    s.summaries=s.summaries.slice(-30).map(({stats,...row})=>row);
+    s.messages=s.messages.slice(-40);
+    s.narrative.history=s.narrative.history.slice(-200);
+    s.narrative.queue=s.narrative.queue.slice(-20);
+    for(const r of Object.values(s.relationships)){r.sharedHistory=r.sharedHistory.slice(-8);if(r.casual)r.casual.history=r.casual.history.slice(-8);}
+    for(const n of Object.values(s.npcStates))n.history=n.history.slice(-8);
+    s.direction.memories=s.direction.memories.slice(-60);
+    s.life.history=s.life.history.filter((h,i,a)=>h.day>=s.day-90||h.day%7===0||i===a.length-1).slice(-360);
+    s.life.economy.transactions=s.life.economy.transactions.slice(-80);
+    s.life.economy.weeks=s.life.economy.weeks.slice(-52);
+    if(s.life.pressure)s.life.pressure.history=s.life.pressure.history.slice(-30);
+  }
+  function compact(g){compactState(g.state);}
+  const api={compact,legacyText,legacySVG,newLife,afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
   root.Vinculos=root.Vinculos||{};root.Vinculos.LifeSystems=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

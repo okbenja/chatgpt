@@ -51,6 +51,10 @@
   const game = new window.LifeGame();
   const hadSave = game.load();
   if (!hadSave) game.create({...defaultProfile, traitIds:window.VINCULOS_DATA.traits.slice(0,2).map(t=>t.id)});
+  game.autosaveDeferred=true;
+  window.addEventListener('pagehide',()=>{if(game.savePending)game.flushSave();});
+  window.addEventListener('vinculos:saved',()=>{updateSaveStatus();if(!game.lastSaveSucceeded&&!$('#persistent-save-error'))main.insertAdjacentHTML('afterbegin','<div id="persistent-save-error" class="notice" role="alert">No se pudo guardar. Tu sesión sigue abierta. <button class="button secondary" id="export-save">Exportar ahora</button></div>');});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.savePending)game.flushSave();});
   const data = window.VINCULOS_DATA;
   const routes = {today:'hoy',map:'explorar',people:'relaciones',family:'familia',character:'personaje',journal:'diario'};
   const viewFromHash = () => Object.keys(routes).find(key => '#/' + routes[key] === location.hash) || 'today';
@@ -150,7 +154,7 @@
   const tagNames={legacy:'Legado',world:'Noticias',estabilidad:'Estabilidad',creatividad:'Creatividad',comunidad:'Comunidad',familia:'Familia',aventura:'Aventura',conocimiento:'Conocimiento',juventud:'Juventud',adultez:'Vida adulta',madurez:'Madurez',vejez:'Vejez',nightlife:'Vida nocturna',casual:'Encuentros casuales',offerDrink:'Invitar a una bebida',danceTogether:'Baile compartido',talkExpectations:'Expectativas',casualFlirt:'Ligue',oneNight:'Ligue de una noche',sayGoodbye:'Despedidas',exchangeContact:'Intercambio de contacto',declineCasual:'Límites claros',shareMemory:'Recuerdos compartidos',askAdvice:'Consejos',cookTogether:'Cocinar juntos',walkTogether:'Paseos',playTogether:'Juegos',shareHobby:'Aficiones',support:'Apoyo',debate:'Debates',studyTogether:'Estudiar en compañía',collaborate:'Colaboración',resolveConflict:'Reparar conflictos',planFuture:'Planes de futuro',chat:'Conversaciones',listen:'Escucha',joke:'Humor',help:'Ayuda',gift:'Detalles',disagree:'Desacuerdos',flirt:'Coqueteo',askDate:'Invitaciones',date:'Citas',relationship:'Pareja',boundary:'Límites',apologize:'Disculpas',breakup:'Ruptura',work:'Trabajo',study:'Estudios',money:'Dinero',health:'Salud',leisure:'Ocio',friendship:'Amistad',romance:'Pareja',family:'Familia',community:'Comunidad',social:'Conversaciones',day:'Resumen del día',milestone:'Recuerdos',life:'Vida cotidiana',event:'Eventos',travel:'Viajes',achievement:'Logros',summary:'Resumen del día'};
   function updateSaveStatus() {
     const age=Date.now()-(game.state.savedAt || Date.now());
-    $('#save-status').textContent=game.corruptSave?'Guardado incompatible · abre Ajustes':!game.lastSaveSucceeded?'No se pudo guardar · exporta tu partida':age<60000?'Guardado hace un momento':`Guardado hace ${Math.max(1,Math.floor(age/60000))} min`;
+    $('#save-status').textContent=game.savePending?'Guardando los cambios…':game.corruptSave?'Guardado incompatible · abre Ajustes':!game.lastSaveSucceeded?'No se pudo guardar · exporta tu partida':age<60000?'Guardado hace un momento':`Guardado hace ${Math.max(1,Math.floor(age/60000))} min`;
   }
   function storageNotice() {
     if(game.state.flags.storageNoticeSeen)return '';
@@ -283,7 +287,7 @@
     openDialog(`<div class="dialog-body legacy-panel"><div class="dialog-eyebrow">DÍA ${l.day} · ${escape(l.type||'historia')}</div><h2 class="dialog-title">${escape(l.title)}</h2><p>${escape(l.text)}</p><h3>Momentos que importaron</h3><ol class="legacy-timeline">${(l.timeline||[]).map(m=>`<li><strong>Día ${m.day}: ${escape(m.title)}</strong><blockquote>«${escape(m.quote)}»</blockquote></li>`).join('')}</ol><h3>Personas que dejaron huella</h3>${(l.people||[]).map(p=>`<p><strong>${escape(p.name)}</strong>: «${escape(p.quote)}»</p>`).join('')}<h3>Lo que quedó abierto</h3><p>${(l.unresolved||[]).map(escape).join(' ')||'Un futuro todavía por escribir.'}</p><div class="system-actions"><button class="button secondary" data-legacy-export="text">Compartir como texto</button><button class="button secondary" data-legacy-export="svg">Descargar imagen SVG</button><button class="button secondary" id="new-life">Una nueva vida con una carta</button><button class="button primary" data-close>Seguir jugando</button></div></div>`);
   }
   function downloadText(text,name,type) {const url=URL.createObjectURL(new Blob([text],{type})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-  function renderMemories() {return `<section class="memory-timeline content-section"><div class="section-heading"><h2>Tu línea de tiempo</h2></div>${game.getMemories().length?game.getMemories().map(m=>`<article class="memory-card"><small>Día ${m.day} · ${formatHour(m.hour)}</small><h3>${escape(m.title)}</h3><p>${escape(m.text)}</p></article>`).join(''):'<p>Marca una estrella en el Diario para conservar un momento. Algunas historias también propondrán recuerdos por sí mismas.</p>'}</section>`;}
+  function renderMemories() {return `<section class="panel content-section"><h2>Meses que quedan en la memoria</h2>${game.state.life.archive.months.slice(-12).reverse().map(m=>`<details><summary>Mes ${m.month} · ${m.days} días · ingresos ${money(m.earned)} · gastos ${money(m.spent)}</summary><p>${m.notes.map(escape).join(' ')}</p></details>`).join('')||'<p>Al vivir tus primeros días aparecerá aquí un resumen mensual.</p>'}</section><section class="memory-timeline content-section"><div class="section-heading"><h2>Tu línea de tiempo</h2></div>${game.getMemories().length?game.getMemories().map(m=>`<article class="memory-card"><small>Día ${m.day} · ${formatHour(m.hour)}</small><h3>${escape(m.title)}</h3><p>${escape(m.text)}</p></article>`).join(''):'<p>Marca una estrella en el Diario para conservar un momento. Algunas historias también propondrán recuerdos por sí mismas.</p>'}</section>`;}
   function renderTrends() {
     let series=game.getTrends();if(!series.length){const links=Object.values(game.state.relationships);series=[{day:game.state.day,money:game.state.money,mood:game.state.stats.mood,relationships:links.length?links.reduce((sum,r)=>sum+r.friendship,0)/links.length:0}];}
     const stride=Math.max(1,Math.ceil(series.length/35));const points=series.filter((_,i)=>i%stride===0||i===series.length-1);
@@ -327,6 +331,7 @@
     $$('.nav-item[data-view]').forEach(el => {const active=el.dataset.view===view;el.classList.toggle('active',active);if(active)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
     main.innerHTML = ({today:renderToday,map:renderMap,people:renderPeople,family:renderFamily,character:renderCharacter,journal:renderJournal}[view])();
     if(view==='today')main.insertAdjacentHTML('afterbegin',renderPressure());
+    if(!game.lastSaveSucceeded)main.insertAdjacentHTML('afterbegin','<div class="notice" role="alert"><strong>No se pudo guardar en este navegador.</strong> La sesión sigue abierta. <button class="button secondary" id="export-save">Exportar ahora</button></div>');
     hydrateIcons();
     hydrateMeters();
   }

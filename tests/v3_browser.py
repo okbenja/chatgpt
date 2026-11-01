@@ -34,6 +34,8 @@ def check(value, label):
 
 
 def state(page):
+    # V4 writes during idle time; observe completion rather than assuming sync IO.
+    page.wait_for_function("!document.querySelector('#save-status')?.textContent.includes('Guardando los cambios')")
     return page.evaluate('(key)=>JSON.parse(localStorage.getItem(key))', SAVE_KEY)
 
 
@@ -252,6 +254,7 @@ def full_game(browser, url):
           'marked memory appears in the consultable timeline')
 
     seed = directed_state(page, day=90)
+    seed['direction']['progress'][seed['aspirations'][0]]['stage'] = 1
     import_save(page, seed)
     nav(page, 'journal')
     check(page.locator('#legacy-review').count() == 1, 'reachable legacy milestone offers a review')

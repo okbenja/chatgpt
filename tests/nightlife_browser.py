@@ -34,6 +34,8 @@ def check(value, label):
 
 
 def state(page):
+    # V4 writes during idle time; observe completion rather than assuming sync IO.
+    page.wait_for_function("!document.querySelector('#save-status')?.textContent.includes('Guardando los cambios')")
     return page.evaluate('(key)=>JSON.parse(localStorage.getItem(key))', SAVE_KEY)
 
 

@@ -263,7 +263,16 @@
       return this.state;
     }
 
-    save() {
+    save(immediate = false) {
+      if(this.autosaveDeferred && !immediate && this.state && !this.corruptSave && this._legacyMigrationText===null) {
+        this.savePending=true;
+        if(!this._saveTimer){const flush=()=>{this._saveTimer=null;this.save(true);if(typeof root.dispatchEvent==='function')root.dispatchEvent(new Event('vinculos:saved'));};
+          this._saveTimer=typeof root.requestIdleCallback==='function'?root.requestIdleCallback(flush,{timeout:300}):setTimeout(flush,100);
+          this._saveTimerIdle=typeof root.requestIdleCallback==='function';}
+        return true;
+      }
+      this.flushSaveTimer();this.savePending=false;
+      if(this.state?.version>=4)this._system('compact');
       if (!this.state) return false;
       // Un guardado dañado se conserva hasta que el jugador importe o reinicie expresamente.
       if (this.corruptSave) { this.lastSaveSucceeded = false; return false; }
@@ -280,6 +289,11 @@
         return true;
       } catch (_) { this.lastSaveSucceeded = false; return false; }
     }
+
+    flushSaveTimer() {
+      if(this._saveTimer){if(this._saveTimerIdle&&typeof root.cancelIdleCallback==='function')root.cancelIdleCallback(this._saveTimer);else clearTimeout(this._saveTimer);this._saveTimer=null;}
+    }
+    flushSave(){return this.save(true);}
 
     load() {
       this.loadError = null;
@@ -311,6 +325,7 @@
     }
 
     reset() {
+      this.flushSaveTimer();this.savePending=false;
       try { if (this.storage) this.storage.removeItem(SAVE_KEY); } catch (_) { /* La sesión sigue siendo reiniciable sin almacenamiento. */ }
       this.state = null;
       this.loadError = null;
@@ -1168,7 +1183,7 @@
       return this._success(message);
     }
 
-    exportSave() { return this.state ? JSON.stringify(this.state, null, 2) : ''; }
+    exportSave() { return this.state ? JSON.stringify(this.state) : ''; }
 
     importSave(json) {
       try {
@@ -1358,7 +1373,7 @@
         object(summary);
         const changes = {};
         for (const key of STATS) changes[key] = number(object(summary.statChanges || summary.stats)[key], -100, 100);
-        return { day: number(summary.day, 1, state.day, true), year: number(summary.year, 1, 1000000, true), dateLabel: text(summary.dateLabel), stats: changes, statChanges: changes, earned: number(summary.earned, 0, 1000000000), spent: number(summary.spent, 0, 1000000000), moneyChange: number(summary.moneyChange, -99999999, 99999999), actions: array(summary.actions, 100).map(action => text(action, 3000)), relationshipChanges: array(summary.relationshipChanges, 100).map(change => { object(change); return { npcId: text(change.npcId), name: text(change.name), friendship: number(change.friendship, -100, 100), trust: number(change.trust, -100, 100), romance: number(change.romance, -100, 100) }; }), highlight: text(summary.highlight, 3000) };
+        return { day: number(summary.day, 1, state.day, true), year: number(summary.year, 1, 1000000, true), dateLabel: text(summary.dateLabel), stats: changes, statChanges: changes, earned: number(summary.earned, 0, 1000000000), spent: number(summary.spent, 0, 1000000000), moneyChange: number(summary.moneyChange, -99999999, 99999999), actions: array(summary.actions, 100).map(action => text(action, 3000)), relationshipChanges: array(summary.relationshipChanges, 100).map(change => { object(change); return { npcId: text(change.npcId), name: text(change.name), friendship: number(change.friendship, -100, 100), trust: number(change.trust, -100, 100), romance: number(change.romance, -100, 100) }; }), highlight: text(summary.highlight, 3000),sustainability:typeof summary.sustainability==='string'?text(summary.sustainability,3000):'',explanations:isObject(summary.explanations)?JSON.parse(JSON.stringify(summary.explanations)):{} };
       });
       const age = state.profile.age + Math.floor((state.day + 360 - state.birthDay) / 360) - (state.birthDay === 1 ? 1 : 0);
       state.lifeStage = age < 25 ? 'juventud' : age < 40 ? 'adultez_temprana' : age < 65 ? 'adultez' : 'madurez';
