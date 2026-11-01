@@ -38,6 +38,7 @@
       for(const summary of s.summaries)archiveSummary(s,summary);
       compactState(s);
     }
+    hydrateSocialWorld(g,s,input);
     hydratePressure(g,s,input);
     s.lifeStage=stage(g,s);
     return s;
@@ -214,7 +215,7 @@
     l.lastWarning=warning;
     l.history.push({day:s.day,money:s.money,mood:s.stats.mood,relationships:mean(g),energy:s.stats.energy});l.history=l.history.slice(-1200);
   }
-  function newDay(g){const s=g.state,l=s.life;compactState(s);pressureMorning(g);const recoveryPenalty=Math.round((defs(g).lifeStages.find(x=>x.id===stage(g)).energyFactor-1)*50);if(recoveryPenalty)g._effects({energy:-recoveryPenalty});l.world.weather=defs(g).weathers[Math.floor(g.random()*defs(g).weathers.length)].id;l.world.news=l.world.news.filter(n=>n.endDay>s.day);if(l.world.news.length<2&&g.random()<.12*difficulty(g).riskFactor){const n=defs(g).worldNews[Math.floor(g.random()*defs(g).worldNews.length)];if(!l.world.news.some(x=>x.id===n.id)){l.world.news.push({id:n.id,startDay:s.day,endDay:s.day+n.days});g._journal(n.title,n.text,'world',{tags:['barrio']});}}l.world.lastUpdatedDay=s.day;for(const k of Object.values(l.skills))if(s.day-k.lastPracticeDay>10)k.xp=Math.max(0,k.xp-.08);if(l.pet){l.pet.care=cap(l.pet.care-9);if(l.pet.care>60)g._effects({mood:2});}for(const id of l.home.upgrades)g._effects(defs(g).homeUpgrades.find(x=>x.id===id).effects);if(l.wellbeing.illness>60)g._effects({energy:-8,health:-2});const j=l.employment;if(j.jobId!=='none'&&j.status==='employed'&&s.day-j.lastWorkedDay>7&&!g.isWeekend()){j.performance=cap(j.performance-4*difficulty(g).riskFactor);if(j.performance<15){j.status='unemployed';g._journal('Un trabajo termina','El contrato termina tras varias ausencias. Puedes buscar otro empleo, formarte o aceptar encargos mientras decides.','work',{tags:['trabajo']});}}}
+  function newDay(g){const s=g.state,l=s.life;compactState(s);pressureMorning(g);socialMorning(g);const recoveryPenalty=Math.round((defs(g).lifeStages.find(x=>x.id===stage(g)).energyFactor-1)*50);if(recoveryPenalty)g._effects({energy:-recoveryPenalty});l.world.weather=defs(g).weathers[Math.floor(g.random()*defs(g).weathers.length)].id;l.world.news=l.world.news.filter(n=>n.endDay>s.day);if(l.world.news.length<2&&g.random()<.12*difficulty(g).riskFactor){const n=defs(g).worldNews[Math.floor(g.random()*defs(g).worldNews.length)];if(!l.world.news.some(x=>x.id===n.id)){l.world.news.push({id:n.id,startDay:s.day,endDay:s.day+n.days});g._journal(n.title,n.text,'world',{tags:['barrio']});}}l.world.lastUpdatedDay=s.day;for(const k of Object.values(l.skills))if(s.day-k.lastPracticeDay>10)k.xp=Math.max(0,k.xp-.08);if(l.pet){l.pet.care=cap(l.pet.care-9);if(l.pet.care>60)g._effects({mood:2});}for(const id of l.home.upgrades)g._effects(defs(g).homeUpgrades.find(x=>x.id===id).effects);if(l.wellbeing.illness>60)g._effects({energy:-8,health:-2});const j=l.employment;if(j.jobId!=='none'&&j.status==='employed'&&s.day-j.lastWorkedDay>7&&!g.isWeekend()){j.performance=cap(j.performance-4*difficulty(g).riskFactor);if(j.performance<15){j.status='unemployed';g._journal('Un trabajo termina','El contrato termina tras varias ausencias. Puedes buscar otro empleo, formarte o aceptar encargos mientras decides.','work',{tags:['trabajo']});}}}
   function availability(g,id,base){if(!base.open||id==='casa')return base;const w=defs(g).weathers.find(w=>w.id===g.state.life.world.weather);const closed=(w.closed||[]).includes(id)||g.state.life.world.news.some(n=>(defs(g).worldNews.find(x=>x.id===n.id).closed||[]).includes(id));return closed?{...base,open:false,reason:'Este lugar está cerrado temporalmente por el clima o las noticias del barrio.'}:base;}
   function applyEffects(g,e){for(const [id,xp] of Object.entries(e.skills||{}))if(g.state.life.skills[id]&&finite(xp)){const k=g.state.life.skills[id];k.xp=cap(k.xp+xp);k.lastPracticeDay=g.state.day;}if(e.performance)g.state.life.employment.performance=cap(g.state.life.employment.performance+e.performance);}
   function get(g,name){const s=g.state,l=s.life;if(name==='travel')return 2+defs(g).weathers.find(w=>w.id===l.world.weather).energyExtra+l.world.news.reduce((n,x)=>n+(defs(g).worldNews.find(z=>z.id===x.id).energyExtra||0),0);if(name==='economy'){const h=defs(g).housing.find(h=>h.id===l.home.type);return {...l.economy,weekly:l.economy.weeks.at(-1)||{income:0,expenses:0,interest:0},upcomingExpenses:Math.round((h.weeklyRent+20+(l.pet?defs(g).pets.find(p=>p.id===l.pet.kind).weeklyCost:0))*difficulty(g).costFactor*l.world.news.reduce((factor,n)=>factor*(defs(g).worldNews.find(x=>x.id===n.id).costFactor||1),1))};}if(name==='employment'){const j=defs(g).jobs.find(j=>j.id===l.employment.jobId);return {...l.employment,title:j?.label||'Entre trabajos',level:s.career.level,salary:j?Math.round(j.basePay*(1+s.career.level*.18)):0,schedule:j?`${j.start}:00–${j.end}:00`:'A tu ritmo',...j};}if(name==='skills')return defs(g).skills.map(k=>({...k,value:l.skills[k.id].xp}));if(name==='home')return {...defs(g).housing.find(h=>h.id===l.home.type),...l.home,housingId:l.home.type};if(name==='pet')return l.pet;if(name==='world')return {...l.world,weather:defs(g).weathers.find(w=>w.id===l.world.weather),news:l.world.news.map(n=>({...defs(g).worldNews.find(x=>x.id===n.id),...n}))};return null;}
@@ -242,6 +243,7 @@
     if(id==='practiceSkill'||id==='createWork'||/estudi|clase/.test(id))p.load=cap(p.load+2*factor);
     if(/descanso|pasear|medita/.test(id))p.load=cap(p.load-3);
     if(extra.kind==='social'&&extra.npcId) {
+      const npc=s.npcStates[extra.npcId];if(npc)npc.needs.support=cap(npc.needs.support-18);
       p.warnings=p.warnings.filter(w=>w.npcId!==extra.npcId);
       if(g.getRelationship(extra.npcId)?.conflict>20)p.load=cap(p.load+3*factor);
       else p.load=cap(p.load-1);
@@ -301,6 +303,64 @@
     p.history.push({day:s.day,text});p.history=p.history.slice(-60);transaction(g,-cost,'extraordinary');g._journal('Una salida posible',text,'pressure',{tags:['economía','decision']});
     return g._success(text,{kind:'system',actionId:type});
   }
+  function hydrateSocialWorld(g,s,input) {
+    const saved=input.version===4?input.life.socialWorld:null,ids=defs(g).npcs.map(n=>n.id);
+    if(saved){
+      if(!saved.people||typeof saved.people!=='object'||!Array.isArray(saved.edges)||saved.edges.length>80||!Array.isArray(saved.history)||saved.history.length>40||!Array.isArray(saved.secrets)||saved.secrets.length>20)throw Error('Mundo social inválido');
+      for(const id of ids){const p=saved.people[id];if(!p||typeof p.residence!=='string'||p.residence.length>120||typeof p.occupation!=='string'||p.occupation.length>120||p.workplace!==null&&!defs(g).locations.some(l=>l.id===p.workplace)||p.partnerId!==null&&!ids.includes(p.partnerId))throw Error('Agenda inválida');if(p.partnerId){const a=defs(g).npcs.find(n=>n.id===id),b=defs(g).npcs.find(n=>n.id===p.partnerId);if(a.family||b.family||a.age<18||b.age<18||a.id===b.id||saved.people[p.partnerId]?.partnerId!==id)throw Error('Vínculo entre personas inválido');}}
+      for(const e of saved.edges)if(!ids.includes(e.a)||!ids.includes(e.b)||!['amistad','alianza','celos'].includes(e.kind)||!finite(e.strength)||e.strength<0||e.strength>100)throw Error('Red inválida');
+      for(const row of saved.history)if(!finite(row.day)||row.day>s.day||typeof row.text!=='string'||row.text.length>500)throw Error('Historia social inválida');
+      for(const row of saved.secrets)if(!ids.includes(row.from)||!ids.includes(row.to)||!finite(row.day)||row.day>s.day)throw Error('Secreto inválido');
+      s.life.socialWorld=clone(saved);return;
+    }
+    s.life.socialWorld={people:Object.fromEntries(defs(g).npcs.map(n=>[n.id,{residence:'el barrio',workplace:n.family?'plaza':null,occupation:n.occupation,partnerId:null}])),edges:defs(g).socialLinks.map(([a,b])=>({a,b,kind:'amistad',strength:50})),history:[],secrets:[]};
+  }
+  function socialNote(g,id,text) {
+    const w=g.state.life.socialWorld;
+    w.history.push({day:g.state.day,npcId:id,text:text.slice(0,500)});w.history=w.history.slice(-40);
+    g.state.npcStates[id].history.push({day:g.state.day,text:text.slice(0,500)});
+    g.state.npcStates[id].history=g.state.npcStates[id].history.slice(-8);
+    g._journal('La vida de '+g.getNPC(id).name,text,'world',{npcId:id,tags:['personas']});
+  }
+  function socialMorning(g) {
+    const s=g.state,w=s.life.socialWorld;
+    if(s.day>=8&&s.day%4===0){
+      const index=Math.floor(s.day/4)-2,n=defs(g).npcs[index%defs(g).npcs.length],p=w.people[n.id],change=defs(g).npcLifeChanges[Math.floor(index/defs(g).npcs.length)%4];
+      if(change.id==='mudanza'){p.residence=change.residences[Math.floor(g.random()*change.residences.length)];socialNote(g,n.id,`${n.name} se muda a ${p.residence}. Su agenda deja espacio para volver a encontrarse.`);}
+      if(change.id==='oficio'){p.workplace=change.workplaces[Math.floor(g.random()*change.workplaces.length)];p.occupation='Colabora en '+defs(g).locations.find(l=>l.id===p.workplace).name;socialNote(g,n.id,`${n.name} ahora ${p.occupation.toLowerCase()}. Entre semana estará allí de nueve a cuatro.`);}
+      if(change.id==='vinculo'&&!n.family&&n.age>=18&&n.available!==false&&s.direction.settings.romance) {
+        const active=r=>r.romance>0||['dating','partner'].includes(r.status);
+        if(!active(s.relationships[n.id])){
+          if(p.partnerId&&s.day-(p.partnerDay||0)>=120){const other=p.partnerId;w.people[other].partnerId=null;p.partnerId=null;socialNote(g,n.id,`${n.name} y ${g.getNPC(other).name} acuerdan terminar su relación. Buscan otro modo de seguir con sus vidas.`);}
+          else if(!p.partnerId){const candidates=defs(g).npcs.filter(x=>x.id!==n.id&&!x.family&&x.age>=18&&x.available!==false&&!w.people[x.id].partnerId&&!active(s.relationships[x.id]));const other=candidates[Math.floor(g.random()*candidates.length)];if(other){p.partnerId=other.id;p.partnerDay=s.day;w.people[other.id].partnerId=n.id;w.people[other.id].partnerDay=s.day;socialNote(g,n.id,`${n.name} y ${other.name} eligen empezar una relación después de hablar de lo que esperan. Sus decisiones no cambian tus vínculos por ti.`);}}
+        }
+      }
+      if(change.id==='alianza'){
+        const others=defs(g).npcs.filter(x=>x.id!==n.id),other=others[Math.floor(g.random()*others.length)];
+        const unequal=Math.abs(s.relationships[n.id].friendship-s.relationships[other.id].friendship)>35;
+        const edge={a:n.id,b:other.id,kind:unequal?'celos':'alianza',strength:55};w.edges.push(edge);w.edges=w.edges.slice(-80);
+        socialNote(g,n.id,unequal?`${n.name} y ${other.name} hablan de cómo repartir la atención y el tiempo: una amistad siente distancia.`:`${n.name} y ${other.name} se apoyan para organizar una actividad del barrio.`);
+      }
+    }
+    if(s.narrative.flags.secret_affair&&s.day%5===0){
+      const from=s.narrative.flags.affair_target||'mateo',edge=w.edges.find(e=>e.a===from||e.b===from),to=edge?(edge.a===from?edge.b:edge.a):'valentina';
+      if(from!==to&&!w.secrets.some(x=>x.from===from&&x.to===to)){
+        w.secrets.push({from,to,day:s.day});w.secrets=w.secrets.slice(-20);s.relationships[to].trust=cap(s.relationships[to].trust-2);s.relationships[to].conflict=cap(s.relationships[to].conflict+3);
+        socialNote(g,to,`${g.getNPC(to).name} ha oído una parte de una historia íntima. No sabe todo; una conversación honesta sigue pendiente.`);
+      }
+    }
+    for(const message of s.messages.filter(m=>m.day===s.day&&!m.answered)){
+      const memory=s.relationships[message.npcId].sharedHistory.at(-1),info=personInfo(g,message.npcId);
+      if(memory)message.text=`Me acordé de aquel momento: «${memory.text.slice(0,130)}». ${info.expectation}`;
+      else message.text+=` ${info.expectation}`;
+    }
+  }
+  function personInfo(g,id) {
+    const n=g.getNPC(id),r=g.getRelationship(id),w=g.state.life.socialWorld,p=w.people[id];
+    if(!n||!r)return null;
+    const expectation=r.conflict>20?'Me vendría bien hablar de lo que quedó incómodo.':n.needs.support>65?'¿Buscamos un rato para escucharnos, sin resolverlo todo?':/Direct|Sincer/.test(n.traits.join(' '))?'Prefiero saber con claridad qué puedes compartir.':'Un plan pequeño, sin prometer demasiado, me apetece.';
+    return {matters:(defs(g).npcs.find(x=>x.id===id)?.needs||n.interests),expectation,last:r.sharedHistory.at(-1)?.text||g.state.npcStates[id]?.history.at(-1)?.text||'Todavía no hay un momento compartido.',residence:p?.residence||'el hogar familiar',occupation:p?.occupation||n.occupation,partner:p?.partnerId?g.getNPC(p.partnerId)?.name:null,links:w.edges.filter(e=>e.a===id||e.b===id).slice(-4).map(e=>({...e,name:g.getNPC(e.a===id?e.b:e.a)?.name}))};
+  }
   function archiveSummary(s,summary) {
     const month=Math.floor((summary.day-1)/30)+1,list=s.life.archive.months;
     let row=list.find(m=>m.month===month);
@@ -339,7 +399,7 @@
     g._journal(item.title,item.text,'milestone',{tags:['comienzo']});g.save();return {ok:true,message:'Ya tienes un rumbo. Elige qué cuidar primero.'};
   }
   function compact(g){compactState(g.state);}
-  const api={start,unlocks,compact,legacyText,legacySVG,newLife,afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
+  const api={personInfo,start,unlocks,compact,legacyText,legacySVG,newLife,afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
   root.Vinculos=root.Vinculos||{};root.Vinculos.LifeSystems=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
 })(typeof window!=='undefined'?window:globalThis);

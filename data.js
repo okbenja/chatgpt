@@ -1127,3 +1127,13 @@ window.VINCULOS_DATA.events.find(e=>e.id==='secreto_pesa').trigger='infidelity';
     {title:'Haz tuyo el barrio',text:'Visita un lugar y conoce a alguien. Los demás sistemas aparecerán cuando los necesites.',targetView:'map'}
   ];
 })(window.VINCULOS_DATA);
+
+(function(d){
+  d.socialLinks=[['mateo','valentina'],['alex','ines'],['sofia','nora'],['jefa','gabriel'],['colega_sara','colega_tomas'],['leo','compa_abril'],['hugo','celia'],['mara','uni_sam']];
+  d.npcLifeChanges=[
+    {id:'mudanza',title:'Otra dirección',residences:['la ribera','el centro','el barrio norte'],text:'Se muda y reorganiza sus ratos libres.'},
+    {id:'oficio',title:'Un rumbo de trabajo distinto',workplaces:['biblioteca','centrocultural','mercado','trabajo'],text:'Empieza otra actividad y cambia parte de su agenda.'},
+    {id:'vinculo',title:'Dos historias se encuentran',text:'Habla con otra persona sobre lo que quieren compartir.'},
+    {id:'alianza',title:'Una red que también cambia',text:'Una amistad se vuelve apoyo para un proyecto común.'}
+  ];
+})(window.VINCULOS_DATA);

@@ -32,7 +32,7 @@ function runLife(profile,seed,days,index=0){
     if((s.life.wellbeing.nutrition<45||s.stats.health<65)&&visit('casa'))act(()=>s.money>=6?g.performAction('comer_casa'):g.lifeAction('assistedMeal'));
    }
    if(profile.id==='prudente'){if(s.money>150)act(()=>g.lifeAction('depositSavings',{amount:Math.min(50,s.money-100)}));meet(['mateo','valentina','madre','nora','ines'][day%5]);}
-   if(profile.id==='estudiante'){const loc=index%2?'colegio':'universidad';if(visit(loc)){const a=D.locations.find(l=>l.id===loc).actions.find(a=>/clase|estudi/.test(a.id));if(a)act(()=>g.performAction(a.id));}meet(['uni_sam','nora','compa_iris','leo'][day%4]);}
+   if(profile.id==='estudiante'){const loc=index%2?'colegio':'universidad';if(visit(loc)){const a=D.locations.find(l=>l.id===loc).actions.find(a=>/clase|estudi/.test(a.id));if(a)act(()=>g.performAction(a.id));}meet(['uni_sam','nora','compa_abril','leo'][day%4]);}
    if(profile.id==='creativo'){act(()=>g.lifeAction('practiceSkill',{id:'creatividad'}));if(s.life.skills.creatividad.xp>=20&&day%3===0)act(()=>g.lifeAction('createWork',{id:'creatividad'}));if(visit('centrocultural'))act(()=>g.performAction(D.locations.find(l=>l.id==='centrocultural').actions[0].id));}
    if(profile.id==='familia')romance();
    if(profile.id==='hogar'){if(s.life.home.type==='familiar'&&s.money>110)act(()=>g.lifeAction('moveHome',{id:'compartido'}));if(!s.life.pet&&s.money>90)act(()=>g.lifeAction('adoptPet',{id:'gato',name:'Miga'}));if(s.life.pet)act(()=>g.lifeAction('carePet',{id:'play'}));if(visit('casa'))meet('ines');}

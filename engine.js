@@ -191,6 +191,7 @@
     }
 
     _system(method,args=[]) {const m=root.Vinculos?.LifeSystems;return m&&typeof m[method]==='function'?m[method](this,...args):undefined;}
+    getPersonInfo(id){return this._system('personInfo',[id]);}
     getSystemUnlocks(){return this._system('unlocks');}
     startPreset(id){return this._system('start',[id]);}
     getEconomy(){return this._system('get',['economy']);}
@@ -347,9 +348,10 @@
       if (!npc) return null;
       if (!this.state) return npc;
       const dynamic = this.state.npcStates[id] || {};
+      const person=this.state.life?.socialWorld?.people[id];
       const birthday = npc.birthDay || npc.birthday?.day || this._birthday(id);
       const elapsed = npc.child ? Math.floor((this.state.day - npc.bornOn) / 360) : Math.floor((this.state.day + 360 - birthday) / 360) - (birthday === 1 ? 1 : 0);
-      return { ...npc, age: npc.child ? Math.max(0, elapsed) : npc.age + elapsed, mood: dynamic.mood ?? 60, needs: { support: 50, space: 50, ...(dynamic.needs || {}) }, movedTo: dynamic.movedTo || null, birthDay: birthday };
+      return { ...npc,occupation:person?.occupation||npc.occupation,residence:person?.residence||'el barrio',available:npc.available!==false&&!person?.partnerId,age: npc.child ? Math.max(0, elapsed) : npc.age + elapsed, mood: dynamic.mood ?? 60, needs: { support: 50, space: 50, ...(dynamic.needs || {}) }, movedTo: dynamic.movedTo || null, birthDay: birthday };
     }
     getRelationship(id) { return this.state && this.state.relationships[id] || null; }
     getLocationAvailability(id, hour = this.state ? this.state.hour : 9) {
@@ -400,7 +402,7 @@
         const dynamic = this.state.npcStates[npc.id];
         if (dynamic && dynamic.awayUntil > this.state.day) return false;
         if(npc.child)return destination==='casa';
-        if(npc.family)return destination===(this.state.life&&this.state.life.home.type!=='familiar'?'casa_familiar':'casa');
+        if(npc.family){const role=this.state.life?.socialWorld?.people[npc.id],home=this.state.life&&this.state.life.home.type!=='familiar'?'casa_familiar':'casa';return destination===(this.state.day>=7&&!this.isWeekend()&&hour>=10&&hour<16&&role?.workplace?role.workplace:home);}
         if(this.state.life?.home.roommateId===npc.id&&hour>=18)return destination==='casa';
         const locations = npc.locations && npc.locations.length ? npc.locations : [npc.home || 'plaza'];
         let current = npc.home || locations[0];
@@ -410,6 +412,8 @@
         if (this.isWeekend() && ['trabajo', 'colegio', 'universidad'].includes(current)) {
           current = locations.find(id => ['plaza', 'cafeteria'].includes(id)) || 'plaza';
         }
+        const role=this.state.life?.socialWorld?.people[npc.id];
+        if(role?.workplace&&!this.isWeekend()&&hour>=9&&hour<16)current=role.workplace;
         if (dynamic && dynamic.movedTo) current = dynamic.movedTo;
         if (npc.nightHome && hour >= (npc.nightStartsAt || 18) && !npc.family && npc.age >= 18) current = npc.nightHome;
         if (!this.getLocationAvailability(current, hour).open) current = locations.find(id => this.getLocationAvailability(id, hour).open) || 'plaza';
@@ -1038,7 +1042,7 @@
         dynamic.mood = clamp(dynamic.mood + Math.round(this.random() * 12 - 6));
         dynamic.needs.support = clamp(dynamic.needs.support + 4);
         dynamic.needs.space = clamp(dynamic.needs.space - 12);
-        if (!npc.family && this.state.day > 10 && this.random() < 0.005) {
+        if (this.state.version<4&&!npc.family && this.state.day > 10 && this.random() < 0.005) {
           const place = npc.locations[Math.floor(this.random() * npc.locations.length)];
           dynamic.movedTo = place;
           dynamic.history.push({ day: this.state.day, text: `Ahora suele pasar más tiempo en ${this.data.locations.find(location => location.id === place).name}.` });

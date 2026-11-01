@@ -252,7 +252,7 @@
   }
   function renderWorld() {
     const w=game.getWorld();if(!w)return '';
-    return `<section class="world-strip"><div class="weather-chip">${icon(w.weather.id==='despejado'?'sun':'leaf')}<strong>${escape(w.weather.label)}</strong><span>${w.weather.energyExtra?'Los desplazamientos piden '+w.weather.energyExtra+' de energía adicional.':'Un día sin cambios de ritmo por el clima.'}</span></div>${w.news.map(n=>`<article class="world-news"><strong>${escape(n.title)}</strong><p>${escape(n.text)}</p><small>Hasta el día ${n.endDay}</small></article>`).join('')}</section>`;
+    return `<section class="world-strip"><div class="weather-chip">${icon(w.weather.id==='despejado'?'sun':'leaf')}<strong>${escape(w.weather.label)}</strong><span>${w.weather.energyExtra?'Los desplazamientos piden '+w.weather.energyExtra+' de energía adicional.':'Un día sin cambios de ritmo por el clima.'}</span></div>${game.state.life.socialWorld.history.slice(-2).map(n=>`<p class="world-social-note">${escape(n.text)}</p>`).join('')}${w.news.map(n=>`<article class="world-news"><strong>${escape(n.title)}</strong><p>${escape(n.text)}</p><small>Hasta el día ${n.endDay}</small></article>`).join('')}</section>`;
   }
   function renderLifeSystems() {
     const e=game.getEconomy(),job=game.getEmployment(),h=game.getHome(),pet=game.getPet();
@@ -468,8 +468,8 @@
   function closeDialog() { dialog.close(); activeNPC=null; lastDialogue=null; creatorDraft=null; }
 
   function renderPersonHistory(n,r) {
-    const dynamic=game.state.npcStates?.[n.id];
-    return `<section class="person-history"><h3>Lo que le importa</h3><p>${escape((Array.isArray(n.needs)?n.needs:data.npcs.find(p=>p.id===n.id)?.needs || ['Ser escuchade','Tener su propio espacio']).join(' · '))}</p><p>Personalidad: ${n.traits.map(escape).join(' · ')}${dynamic?' · Ánimo '+Math.round(dynamic.mood)+'/100':''}</p><h3>Vuestra historia reciente</h3>${r.sharedHistory?.length?`<ol>${r.sharedHistory.slice(-4).reverse().map(h=>`<li><strong>Día ${h.day} · ${escape(h.title)}</strong><p>${escape(h.text)}</p></li>`).join('')}</ol>`:'<p>Aún estáis escribiendo las primeras líneas.</p>'}</section>`;
+    const dynamic=game.state.npcStates?.[n.id],info=game.getPersonInfo(n.id);
+    return `<section class="person-history"><h3>Lo último que pasó</h3><p>${escape(info.last)}</p><h3>Qué espera de ti</h3><p>${escape(info.expectation)}</p><p>${escape(info.occupation)} · Vive en ${escape(info.residence)}${info.partner?' · Comparte una relación con '+escape(info.partner):''}</p>${info.links.length?`<p>Su círculo: ${info.links.map(e=>escape(e.name)+' ('+escape(e.kind)+')').join(', ')}</p>`:''}<h3>Lo que le importa</h3><p>${escape((Array.isArray(n.needs)?n.needs:data.npcs.find(p=>p.id===n.id)?.needs || ['Ser escuchade','Tener su propio espacio']).join(' · '))}</p><p>Personalidad: ${n.traits.map(escape).join(' · ')}${dynamic?' · Ánimo '+Math.round(dynamic.mood)+'/100':''}</p><h3>Vuestra historia reciente</h3>${r.sharedHistory?.length?`<ol>${r.sharedHistory.slice(-4).reverse().map(h=>`<li><strong>Día ${h.day} · ${escape(h.title)}</strong><p>${escape(h.text)}</p></li>`).join('')}</ol>`:'<p>Aún estáis escribiendo las primeras líneas.</p>'}</section>`;
   }
 
   function renderNightPanel(n,r,present) {
