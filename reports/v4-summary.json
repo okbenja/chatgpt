@@ -1,0 +1,255 @@
+{
+  "browserPerformance": {
+    "meanMs": 4.400000000372529,
+    "maxMs": 10.400000005960464,
+    "samples": 12
+  },
+  "nodeTests": 99,
+  "browserChecks": 311,
+  "browserSuites": [
+    140,
+    44,
+    65,
+    44,
+    8,
+    10
+  ],
+  "simulation": {
+    "days": 172800,
+    "runs": 160,
+    "events": 336,
+    "observed": 331,
+    "repetitions": 0,
+    "maxBytes": 360190,
+    "legacyTypes": {
+      "estabilidad": 20,
+      "comunidad": 40,
+      "cuidados": 20,
+      "conocimiento": 20,
+      "creatividad": 20
+    },
+    "byProfile": {
+      "prudente": {
+        "days": 21600,
+        "legacies": 20,
+        "stressMean": 25.100694444444443,
+        "stressZeroDays": 87,
+        "stressHighDays": 0,
+        "zeroMoneyDays": 57,
+        "troubleDays": 20,
+        "maxDebt": 250,
+        "meanFinalMoney": 7037.95,
+        "relationshipMean": 26.958177083333332,
+        "maxBytes": 338508,
+        "crises": 899
+      },
+      "descuidado": {
+        "days": 21600,
+        "legacies": 0,
+        "stressMean": 85.41939814814815,
+        "stressZeroDays": 0,
+        "stressHighDays": 20728,
+        "zeroMoneyDays": 0,
+        "troubleDays": 0,
+        "maxDebt": 0,
+        "meanFinalMoney": 130976.15,
+        "relationshipMean": 11.558125000000167,
+        "maxBytes": 323441,
+        "crises": 60
+      },
+      "nocturno": {
+        "days": 21600,
+        "legacies": 20,
+        "stressMean": 10.647824074074075,
+        "stressZeroDays": 1275,
+        "stressHighDays": 0,
+        "zeroMoneyDays": 409,
+        "troubleDays": 42,
+        "maxDebt": 250,
+        "meanFinalMoney": 1843.85,
+        "relationshipMean": 26.41695216049382,
+        "maxBytes": 358466,
+        "crises": 893
+      },
+      "familia": {
+        "days": 21600,
+        "legacies": 20,
+        "stressMean": 7.903888888888889,
+        "stressZeroDays": 979,
+        "stressHighDays": 0,
+        "zeroMoneyDays": 0,
+        "troubleDays": 20,
+        "maxDebt": 0,
+        "meanFinalMoney": 26340.8,
+        "relationshipMean": 16.519992283950618,
+        "maxBytes": 360190,
+        "crises": 898
+      },
+      "estudiante": {
+        "days": 21600,
+        "legacies": 20,
+        "stressMean": 30.54023148148148,
+        "stressZeroDays": 0,
+        "stressHighDays": 0,
+        "zeroMoneyDays": 6,
+        "troubleDays": 61,
+        "maxDebt": 31,
+        "meanFinalMoney": 1734.9,
+        "relationshipMean": 26.85591435185187,
+        "maxBytes": 353451,
+        "crises": 899
+      },
+      "creativo": {
+        "days": 21600,
+        "legacies": 20,
+        "stressMean": 37.15949074074074,
+        "stressZeroDays": 0,
+        "stressHighDays": 0,
+        "zeroMoneyDays": 307,
+        "troubleDays": 39,
+        "maxDebt": 250,
+        "meanFinalMoney": 1791.2,
+        "relationshipMean": 13.315667438271603,
+        "maxBytes": 351067,
+        "crises": 891
+      },
+      "hogar": {
+        "days": 21600,
+        "legacies": 20,
+        "stressMean": 10.19361111111111,
+        "stressZeroDays": 1405,
+        "stressHighDays": 0,
+        "zeroMoneyDays": 891,
+        "troubleDays": 77,
+        "maxDebt": 250,
+        "meanFinalMoney": 257.55,
+        "relationshipMean": 19.13052662037038,
+        "maxBytes": 352911,
+        "crises": 894
+      },
+      "aleatorio": {
+        "days": 21600,
+        "legacies": 0,
+        "stressMean": 69.1713425925926,
+        "stressZeroDays": 5,
+        "stressHighDays": 13238,
+        "zeroMoneyDays": 13,
+        "troubleDays": 0,
+        "maxDebt": 250,
+        "meanFinalMoney": 4727.6,
+        "relationshipMean": 14.839232253086413,
+        "maxBytes": 341669,
+        "crises": 60
+      }
+    }
+  },
+  "neverObserved": [
+    {
+      "id": "expectativas_cita",
+      "title": "Lo que esperáis de una cita",
+      "conditions": {
+        "lifeStages": [
+          "juventud",
+          "adultez",
+          "madurez",
+          "vejez"
+        ],
+        "relationships": {
+          "valentina": {
+            "friendship": {
+              "min": 30
+            },
+            "romance": {
+              "min": 5
+            }
+          }
+        }
+      },
+      "chainOnly": false,
+      "explanation": "Exige amistad e interés con Valentina. El bot de pareja elige Alex, Sofía o Mateo; el aleatorio no recorrió esta combinación. tests/rare_routes.test.js la abre mediante conversaciones reales."
+    },
+    {
+      "id": "cita_ritmos",
+      "title": "Un ritmo para dos",
+      "conditions": {
+        "lifeStages": [
+          "juventud",
+          "adultez",
+          "madurez",
+          "vejez"
+        ]
+      },
+      "chainOnly": true,
+      "explanation": "Segunda parte de expectativas_cita; depende de la decisión anterior con Valentina. La prueba dirigida recorre el retardo y esta continuación."
+    },
+    {
+      "id": "cita_balance",
+      "title": "Lo que sí queréis cuidar",
+      "conditions": {
+        "lifeStages": [
+          "juventud",
+          "adultez",
+          "madurez",
+          "vejez"
+        ]
+      },
+      "chainOnly": true,
+      "explanation": "Tercera parte de la misma cadena de Valentina. La prueba dirigida la resuelve después de las dos decisiones anteriores."
+    },
+    {
+      "id": "secreto_descubierto",
+      "title": "Una conversación inevitable",
+      "conditions": {
+        "lifeStages": [
+          "juventud",
+          "adultez",
+          "madurez",
+          "vejez"
+        ]
+      },
+      "chainOnly": true,
+      "explanation": "Exige ocultar un secreto y mantener el contexto de pareja hasta la continuación. La política no recorrió esa combinación; la prueba dirigida elige ocultar y resuelve la consecuencia."
+    },
+    {
+      "id": "v3_hogar_propio",
+      "title": "Tu casa también descansa",
+      "conditions": {
+        "lifeStages": [
+          "juventud",
+          "adultez",
+          "madurez",
+          "vejez"
+        ],
+        "housing": [
+          "estudio",
+          "terraza"
+        ]
+      },
+      "chainOnly": false,
+      "explanation": "Exige estudio o terraza. El perfil de hogar vive en piso compartido y los demás no compran vivienda propia. La prueba dirigida se muda realmente a un estudio y resuelve el evento."
+    }
+  ],
+  "storage": {
+    "daysPerLife": 3600,
+    "lives": 2,
+    "bytes": 358520,
+    "loadedBytes": 358520,
+    "loadMeanMs": 3.7838593333329604,
+    "loadMaxMs": 8.213754000000336,
+    "samples": 12,
+    "limits": {
+      "bytes": 1500000,
+      "loadMeanMs": 300
+    }
+  },
+  "catalogAudit": {
+    "events": 336,
+    "options": 816,
+    "duplicateIds": 0,
+    "duplicateBaseTexts": [],
+    "equivalentOptions": [],
+    "brokenReferences": [],
+    "unreachableFromAnyRoot": [],
+    "unusedFunctionCandidates": []
+  }
+}

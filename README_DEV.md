@@ -1,21 +1,21 @@
-# Desarrollo de Vínculos V3
+# Desarrollo de Vínculos V4
 
-El juego usa HTML, CSS y JavaScript sin frameworks, librerías de ejecución ni peticiones externas. Los retratos, escenas y gráficos son SVG propios. Puede abrirse desde `index.html`; Node.js 18 o posterior permite iniciar el servidor y ejecutar las pruebas.
+JavaScript puro, sin librerías de ejecución, evaluación de código desde datos ni peticiones de red. Node 18+ sirve para pruebas y servidor opcional; Python Playwright y Chromium se usan solo en desarrollo.
 
-## Iniciar y validar
+## Flujo de trabajo
 
 ```sh
-npm run dev
 npm test
-python tests/browser_smoke.py
-python tests/nightlife_browser.py
-python tests/v3_browser.py
-node tests/v3_simulation.js --days 1080 --seeds 20
+npm run test:sim:smoke
+npm run test:ui
+npm run test:sim
+npm run dev
+python scripts/build-release.py
 ```
 
-No se necesita instalar paquetes para jugar, servir los archivos o ejecutar las pruebas Node. Los tests Python usan Playwright y Chromium como herramientas de desarrollo: cada suite levanta y detiene su servidor temporal y escribe capturas en `/tmp`. `server.js` sirve únicamente los archivos públicos del juego, incluido `systems.js`; `PORT` configura el puerto y `HOST` la interfaz de escucha.
+No hace falta instalar paquetes npm. Para preparar las herramientas opcionales de navegador: `python -m pip install playwright==1.56.0` y `python -m playwright install --with-deps chromium`. Los tests usan el Chromium del sistema si existe, o el que instala Playwright.
 
-La aplicación debe cargarse en este orden: `data.js`, `systems.js`, `engine.js`, `narrative.js`, `app.js`. En una prueba Node se puede usar:
+El orden de carga es `data.js`, `systems.js`, `engine.js`, `narrative.js`, `app.js`. Abrir `index.html` no requiere `server.js`; las rutas son hash y todos los recursos son relativos. Mantén el mismo origen para conservar el almacenamiento o exporta/importa el JSON.
 
 ```js
 global.window = global;
@@ -24,226 +24,212 @@ require('./systems.js');
 const Game = require('./engine.js');
 require('./narrative.js');
 const game = new Game(null);
-game.create({name: 'Vera', age: 24, aspirationIds: ['creatividad']}, {seed: 42});
+game.create({name:'Vera',age:50,path:'free',scenario:'cero50',aspirationIds:['creatividad']},{seed:42});
 ```
 
-El motor cargado sin `systems.js` mantiene el contrato anterior para herramientas y pruebas de compatibilidad. La aplicación completa carga el módulo y crea partidas V3.
+## Arquitectura
 
-## Arquitectura y estado
+| Archivo | Función |
+|---|---|
+|data.js|Catálogos declarativos: personas, lugares, actividades, eventos, escenarios, dificultades, imprevistos y cambios del mundo.|
+|systems.js|Reglas V4: hidratación, metas y renuncias, presión, empleo, hogar, legado, archivo, escenarios, agendas y red social.|
+|engine.js|Estado y acciones, relaciones, recursos, calendario, validación y persistencia.|
+|narrative.js|Condiciones, pesos, calidad por estrés, selección con semilla, memoria y cadenas.|
+|app.js / styles.css|Vistas, diálogos, accesibilidad, SVG y audio opcional. Las acciones pasan por el motor.|
+|server.js|Servidor estático de lista pública explícita. No sirve .git ni archivos privados.|
+|tests/|Regresiones, seguridad, fixture de migraciones y políticas de simulación.|
+|scripts/|Generación de entregables, informes y comprobación HTTP posterior al despliegue.|
 
-| Archivo | Responsabilidad |
-| --- | --- |
-| `data.js` | Personas, lugares, actividades, eventos y catálogos de aspiraciones, etapas, dificultad, habilidades, empleos, vivienda, mascotas, clima y noticias. |
-| `systems.js` | Módulo `Vinculos.LifeSystems`: hidratación y validación V3, metas, legado, economía, trabajo, práctica, hogar, bienestar y cambios diarios. |
-| `engine.js` | Estado central, acciones y relaciones, calendario, recursos, guardado, migraciones y llamadas al módulo de sistemas. |
-| `narrative.js` | Condiciones, pesos, cooldown, memoria, cadenas, selección y resultados con RNG persistente. |
-| `app.js` | Vistas, formularios, diálogos, gráficos SVG y audio opcional. Los resultados pasan por las APIs del motor. |
-| `styles.css` | Diseño adaptable, foco, medidores, controles táctiles y preferencia de movimiento reducido. |
-| `tests/` | Regresiones Node, Chromium, fixtures de guardado y pilotos de simulación. |
+El motor sin `systems.js` conserva el contrato anterior para las pruebas de compatibilidad. La aplicación completa crea V4. `getCareer` se conserva para esa ruta y la depuración; no es una función muerta.
 
-Los campos V3 principales son:
+## Estado y migración
+
+Se guarda `version:4` en la clave histórica `vinculos-save-v1`. Los formatos 1, 2 y 3 pasan por sus validadores, conservan recursos y decisiones y reciben los campos nuevos por defecto. Antes de persistir una migración local se copia el texto exacto a `vinculos-save-v1-backup`; si falla la copia no se sobrescribe el original. Hay fixtures V1, V2 y V3 en tests/fixtures/.
 
 ```text
-version: 3
-aspirations: [id, id?]
 direction:
-  progress, legacy, memories, visitedLocations, lastChangeDay,
-  settings {difficulty, audioEnabled, volume}, tutorial
+  progress, memories, visitedLocations, lastChangeDay, tutorial
+  settings: difficulty, audioEnabled, volume, nightlife, romance, casual, showAllSystems
+  legacy: reached, day, type, title, text, timeline, people, unresolved, snapshots
+  book, inheritance, onboarding, scenario
 life:
-  economy {savings, debt, creditLimit, lastBilledDay, transactions, weeks}
-  employment {jobId, status, performance, lastWorkedDay, missedShifts}
-  skills {id: {xp, lastPracticeDay}}
-  home {type, roommateId, upgrades, lastMoveDay}
-  pet: null | {kind, name, care, bond, lastCareDay}
-  world {weather, news, lastUpdatedDay}
-  wellbeing {nutrition, movement, rest, illness}
-  history, annual
+  economy, employment, skills, home, pet, world, wellbeing
+  annual, history, archive.months
+  pressure: load, expenses, history, warnings, nextCrisisDay, crises, helpCount
+  socialWorld: people, edges, history, secrets
 ```
 
-`_success` conecta las acciones con el tutorial, las visitas, la práctica social y el motor narrativo. Al dormir, `beforeSleep` cobra gastos y registra tendencias; `afterSummary` conserva agregados anuales; `newDay` actualiza clima, noticias, práctica abandonada, mascota y rendimiento. Los eventos usan el mismo calendario y las mismas habilidades.
+Las importaciones se validan antes de sustituir el estado. Al añadir campos o catálogos después de publicar V4, crea una migración y sube el esquema: no conviertas una partida válida anterior en inválida. Los límites y referencias forman parte del contrato de guardado.
 
-Las listas detalladas tienen límites: 120 recuerdos, 1.200 muestras de tendencias, 300 transacciones y 160 balances semanales. Los agregados de `life.annual` permiten consultar años anteriores aunque se recorten resúmenes diarios detallados.
+El autoguardado de la interfaz activa `autosaveDeferred`: agrupa cambios mediante requestIdleCallback con plazo, o temporizador corto. `savePending` distingue trabajo pendiente de éxito. `flushSave()` vacía la cola en pagehide/visibilitychange; una exportación no depende del disco. Las herramientas Node guardan de forma síncrona salvo que se active ese modo. Se escribe una instantánea acotada completa; no se simula una persistencia parcial que localStorage no ofrece.
 
-## APIs para interfaz y pruebas
+## Límites de historial
 
-Los métodos que realizan acciones devuelven `{ok, message}`; usa ese resultado para informar al jugador. No modifiques el estado directamente desde controles de la interfaz.
+| Lista | Límite habitual |
+|---|---: |
+|Diario detallado|180 entradas|
+|Resúmenes diarios|30 días|
+|Eventos detallados|200|
+|Mensajes|40|
+|Historia compartida/casual por persona|8 de cada tipo|
+|Historia dinámica por NPC|8|
+|Recuerdos marcados|60|
+|Muestras de tendencia|360, con detalle reciente y muestreo semanal antiguo|
+|Transacciones / balances semanales|80 /52|
+|Resúmenes mensuales|120 meses|
+|Libro de vidas / instantáneas del legado|12 /6|
+|Red social / historia global / secretos|80 /40 /20|
 
-| Propósito | Métodos |
-| --- | --- |
-| Dirección | `getGoals()`, `claimGoal(id)`, `changeAspirations(ids)`, `getLifeStage()` |
-| Legado y recuerdos | `getLegacy()`, `reviewLegacy()`, `getMemories()`, `markMemory(journalIndex)` |
-| Sistemas | `getEconomy()`, `getEmployment()`, `getSkills()`, `getHome()`, `getPet()`, `getWorld()` |
-| Preferencias | `setDifficulty(id)`, `setPreferences({audioEnabled, volume})`, `getTutorial()`, `tutorialAction('skip'\|'restart'\|'next')` |
-| Historia y mundo | `getTrends()`, `getCalendar(day)`, `getLocationAvailability(id, hour)`, `getPresentNPCs(location, hour)` |
-| Guardado | `save()`, `exportSave()`, `importSave(json)`, `load()` |
+Se eliminan registros idénticos del mismo día y el resumen diario no se repite como texto persistido en el Diario: la interfaz lo reconstruye. Los totales mensuales y anuales y las decisiones de cadenas se conservan por separado. Hay pequeñas ventanas transitorias entre el cierre y la compactación siguiente; los validadores aceptan la instantánea válida resultante.
 
-`lifeAction(type, payload)` concentra las decisiones de los nuevos sistemas:
+Se mantiene localStorage porque la prueba real de diez años pasa holgadamente 1,5 MB y 300 ms; IndexedDB se evaluó y no se adoptó. Las medidas concretas y su entorno aparecen en BALANCE_V4_REPORT.md.
+
+## APIs
+
+Las acciones devuelven `{ok, message}` y comprueban costes antes de mutar. Los getters no consumen azar.
+
+| Área | Métodos |
+|---|---|
+|Inicio|startPreset(id, scenarioId?), getSystemUnlocks(), updateProfile(profile)|
+|Dirección|getGoals(), claimGoal(id), changeAspirations(ids), getLifeStage()|
+|Legado|getLegacy(), reviewLegacy(), exportLegacy('text'/'svg'), newLife(profile)|
+|Memoria|getMemories(), markMemory(journalIndex), getTrends(), getAnnualSummary(year)|
+|Sistemas|getEconomy(), getEmployment(), getSkills(), getHome(), getPet(), getWorld()|
+|Personas|getNPC(id), getPersonInfo(id), getPresentNPCs(place, hour), interact(id, type)|
+|Contenido|setPreferences({nightlife, romance, casual, showAllSystems, audioEnabled, volume}), setDifficulty(id)|
+|Persistencia|save(), flushSave(), exportSave(), validateImport(json), importSave(json)|
 
 ```js
-game.lifeAction('depositSavings', {amount: 25});
-game.lifeAction('withdrawSavings', {amount: 25});
-game.lifeAction('borrowMoney', {amount: 50});
-game.lifeAction('repayDebt', {amount: 50});
-game.lifeAction('practiceSkill', {id: 'creatividad'});
-game.lifeAction('createWork', {id: 'creatividad'});
-game.lifeAction('changeJob', {id: 'autonomo'});
+game.lifeAction('firstChoice',{id:'ayudar'}); // o encargo; una vez.
+game.lifeAction('resolveExpense',{choice:'pay'}); // help o negotiate.
+game.lifeAction('depositSavings',{amount:25});
+game.lifeAction('withdrawSavings',{amount:25});
+game.lifeAction('borrowMoney',{amount:50});
+game.lifeAction('repayDebt',{amount:50});
+game.lifeAction('practiceSkill',{id:'creatividad'});
+game.lifeAction('createWork',{id:'creatividad'});
+game.lifeAction('changeJob',{id:'autonomo'});
 game.lifeAction('workShift');
-game.lifeAction('promoteJob'); // requestPromotion() también delega aquí en V3.
-game.lifeAction('moveHome', {id: 'compartido'});
-game.lifeAction('improveHome', {id: 'lectura'});
-game.lifeAction('adoptPet', {id: 'gato', name: 'Luna'});
-game.lifeAction('carePet', {id: 'feed'}); // 'play' es un cuidado sin compra.
+game.requestPromotion();
+game.lifeAction('moveHome',{id:'compartido'});
+game.lifeAction('improveHome',{id:'lectura'});
+game.lifeAction('adoptPet',{id:'gato',name:'Miga'});
+game.lifeAction('carePet',{id:'play'}); // feed compra comida.
 game.lifeAction('requestSupport');
 game.lifeAction('assistedMeal');
 ```
 
 ## Añadir un evento
 
-Añade un objeto a `VINCULOS_DATA.events` en `data.js`, con identificadores únicos y al menos una opción viable sin dinero. No uses funciones ni código ejecutable como contenido. Este ejemplo sigue el esquema real:
+Pon el contenido en data.js, con identificadores únicos. Reutiliza el motor; no añadas lógica de reglas a app.js.
 
 ```js
 VINCULOS_DATA.events.push({
-  id: 'lectura_compartida',
-  title: 'Una pregunta entre páginas',
-  text: 'Nora encuentra una idea que merece otra mirada.',
-  variants: ['Nora deja una página abierta para conversar.'],
-  npcId: 'nora',
-  tags: ['conocimiento', 'amistad'],
-  aspirations: ['conocimiento'],
-  introducedIn: 3,
-  conditions: {
-    lifeStages: ['juventud', 'adultez', 'madurez', 'vejez'],
-    locations: ['biblioteca'],
-    hour: {min: 10, max: 19}
-  },
-  weight: 1,
-  cooldown: 21,
-  maxOccurrences: 3,
-  options: [{
-    id: 'escuchar', text: 'Escuchar y compartir una duda',
-    duration: 1, energyCost: 5,
-    results: [{
-      id: 'otra_mirada', weight: 3,
-      text: 'No resolvéis la duda, pero sabéis qué preguntar después.',
-      modifiers: [{skill: 'comunicacion', factor: 0.025}],
-      effects: {
-        skills: {comunicacion: 3}, stats: {knowledge: 2},
-        relationships: {nora: {friendship: 2, trust: 2}},
-        flags: {lectura_compartida: 'dejar una pregunta abierta'}
-      }
-    }]
-  }, {
-    id: 'otro_dia', text: 'Guardar la pregunta para otro día', duration: 0.5,
-    results: [{id: 'pausa', weight: 1, text: 'Acordáis retomarlo sin prisa.',
-      effects: {stats: {stress: -3}}}]
+  id:'taller_pregunta',title:'Una pregunta a tiempo',
+  text:'Nora propone revisar una idea antes de entregarla.',
+  variants:['La entrega está cerca; todavía puedes cambiar una parte.'],
+  npcId:'nora',tags:['estudios'],aspirations:['conocimiento'],
+  content:{},introducedIn:4,
+  conditions:{lifeStages:['juventud','adultez','madurez','vejez'],locations:['biblioteca']},
+  weight:2,cooldown:28,maxOccurrences:4,
+  options:[{
+    id:'revisar',text:'Revisar ahora: 1 h y5 energía',duration:1,energyCost:5,
+    results:[{id:'otra_mirada',weight:3,quality:'positive',
+      text:'Encontráis una pregunta más pequeña y una forma de comprobarla.',
+      modifiers:[{skill:'comunicacion',factor:.025}],
+      effects:{skills:{comunicacion:3},stats:{knowledge:2,stress:3},relationships:{nora:{trust:3}},flags:{taller_pregunta:'revisar antes de entregar'}}}]
+  },{
+    id:'limite',text:'Conservar la tarde; aceptar una entrega más pequeña',duration:.5,
+    results:[{id:'menos',weight:1,text:'Acotas la entrega sin fingir que hará lo mismo.',effects:{stats:{stress:-4},skills:{tecnologia:1}}}]
   }]
 });
 ```
 
-Las condiciones admiten itinerarios (`paths`), lugares, etapas, estaciones, día, hora, dinero, estadísticas, relaciones, flags, aspiraciones, habilidades, empleo (`jobs`), vivienda (`housing`), mascota (`pet`), clima (`weather`), noticias (`news`) y economía. Los rangos se expresan como `{min, max}`; consulta `requirements` en `narrative.js` para el formato de cada condición.
+Declara `content:{romance:true}`, `{casual:true}` o `{nightlife:true}` cuando corresponda. Los filtros actúan también sobre eventos pendientes y depuración. El motor vuelve a comprobar edad y parentesco: una etiqueta no sustituye esa barrera.
 
-Una opción puede exigir `requirements: {aspirations: ['conocimiento']}` o una habilidad mínima. Los resultados ponderados admiten modificadores de estadística, habilidad, aspiración y relación; diferencias de texto deben corresponder a consecuencias reales. `important: true` en el evento o sus efectos propone un recuerdo.
+Condiciones: paths, locations, lifeStages, seasons, day/hour/money, stats, relationships, flags/flagAge, family, special, aspirations, skills, jobs, housing, pet, weather, news, economy y scenarios. Los rangos usan `{min, max}`. Consulta evaluateRequirements para formatos concretos.
 
-Para una cadena, añade al resultado `next: {eventId: 'lectura_revision', delayDays: 2}` y crea ese segundo evento con `chainOnly: true`. Guarda una decisión en `effects.flags` y recupérala en el texto con `{memory:lectura_compartida}`. Mantén una salida que cierre la historia sin obligar a continuarla. `cooldown`, `maxOccurrences` y las etiquetas recientes limitan repeticiones. No cambies el RNG desde la interfaz: el motor lo persiste.
+Una opción exclusiva puede usar `requirements:{aspirations:['conocimiento']}`. Diferencia costes y resultados reales; una prosa distinta con el mismo efecto no basta. Resultados positivos/negativos pueden declarar quality para la ponderación por estrés.
+
+Las cadenas usan `next:{eventId:'taller_revision', delayDays:2}` en el resultado y `chainOnly:true` en la continuación. Guarda una decisión en effects.flags y recupérala con `{memory:taller_pregunta}`. Mantén una salida gratuita y límites de repetición. Los eventos importantes pueden proponer recuerdos con important: true.
 
 ## Añadir un lugar
 
-Añade un objeto a `data.locations` con `id`, `name`, `description`, `icon`, `color`, `scene`, `category`, `type`, `opensAt`, `closesAt` y `actions`. Puedes reutilizar una escena existente; una escena nueva requiere su SVG en `app.js`.
-
 ```js
 VINCULOS_DATA.locations.push({
-  id: 'taller_barrio', name: 'Taller del Barrio',
-  description: 'Un espacio para aprender haciendo.',
-  icon: 'palette', color: '#bccbb5', scene: 'centrocultural',
-  category: 'ciudad', type: 'ocio', opensAt: 10, closesAt: 20,
-  actions: [{
-    id: 'practica_taller', label: 'Probar una idea',
-    description: 'Dedica una hora a una pieza pequeña.',
-    icon: 'palette', duration: 1, cost: 2,
-    effects: {knowledge: 4, mood: 3, energy: -7}
-  }]
+  id:'taller',name:'Taller del barrio',description:'Aprender haciendo.',
+  icon:'palette',color:'#bccbb5',scene:'centrocultural',category:'ciudad',type:'ocio',
+  opensAt:10,closesAt:20,
+  actions:[{id:'practica_taller',label:'Probar una idea',description:'Una hora para una pieza pequeña.',
+    icon:'palette',duration:1,cost:2,effects:{knowledge:4,mood:3,energy:-7}}]
 });
 ```
 
-Da a las personas una agenda que incluya ese lugar y añade eventos con `conditions.locations`. Prueba antes de abrir, durante el horario y cerca del cierre: ni viajar ni realizar una actividad deben consumir recursos si el plan no cabe. Si añades un archivo público, incorpóralo también a la lista explícita de `server.js`.
+Reutiliza una escena SVG o añade la suya. Incorpora el lugar a agendas y condiciones de eventos. Prueba antes de abrir, cerca del cierre y bajo noticias/clima. Si añades un archivo público, inclúyelo en server.js y en build-release.py; no introduzcas peticiones externas.
 
 ## Añadir un empleo
 
-Añade un descriptor a `data.jobs`. Sus referencias deben existir:
-
 ```js
 VINCULOS_DATA.jobs.push({
-  id: 'taller', label: 'Equipo del Taller', location: 'taller_barrio',
-  bossId: 'ines', colleagueIds: ['alex'],
-  start: 10, end: 20, duration: 3, basePay: 55,
-  skill: 'creatividad', minSkill: 10
+  id:'taller',label:'Equipo del taller',location:'taller',bossId:'ines',colleagueIds:['alex'],
+  start:10,end:20,duration:3,basePay:55,skill:'creatividad',minSkill:10
 });
 ```
 
-El turno debe caber en el horario y ejecutarse en su lugar. El sueldo es `round(basePay * (1 + level * 0.18))`; hay niveles 0 a 4. Un ascenso exige rendimiento 70, práctica `10 + level * 8` y experiencia `24 * (level + 1)`. El cambio de oficio reinicia nivel y experiencia del oficio actual. `autonomo` es la ruta por cuenta propia; los demás contratos usan el estado de empleo ordinario.
+Las referencias deben existir. El salario base crece un 18 % por nivel; las noticias pueden modificarlo y el getter anuncia el mismo sueldo que paga el turno. Ascenso: rendimiento 70, habilidad 10+8 × nivel y experiencia 24 × (nivel+1), en el lugar del empleo. Hay niveles 0–4; cambiar de oficio reinicia su progreso. Prueba ausencia, despido y recuperación, además del camino de ascenso.
 
-Los jefes y colegas deben tener ficha y agenda accesibles; añade historias con `conditions.jobs`. Comprueba contratación con y sin habilidad suficiente, turno, ascenso, ausencias, final del contrato y vuelta a otro empleo.
+## Añadir una aspiración o un escenario
 
-## Añadir una aspiración
+Una aspiración tiene id, label, description, icon, tags y tres stages. Cada tramo declara id, title, description, metric, target, reward. Las métricas existentes son savings, skill(creatividad), friend, family, explore ystudy. Una métrica nueva se implementa centralmente en systems.js. Añade su renuncia a aspirationTradeoffs y eventos exclusivos. La migración debe completar su progreso en guardados publicados.
 
-Añade un descriptor con **tres tramos**, objetivos y recompensas:
+Los escenarios declaran recursos, hogar, edad/empleo opcionales y rules de duración limitada: rentFactor, experienceFactor, practiceFactor, until. Sus eventos usan conditions.scenarios. El escenario solo se aplica al crear; editar un personaje ya iniciado no debe regalar recursos ni reiniciarlo.
 
-```js
-VINCULOS_DATA.aspirations.push({
-  id: 'aprendizaje_compartido', label: 'Aprendizaje compartido',
-  description: 'Aprender con otras personas.', icon: 'book',
-  tags: ['conocimiento', 'comunidad'],
-  stages: [3, 10, 25].map((target, i) => ({
-    id: 'aprendizaje_compartido_' + (i + 1),
-    title: ['Primeras preguntas', 'Seguir aprendiendo', 'Compartir lo aprendido'][i],
-    description: 'Un paso que puedes adaptar a tu vida.',
-    metric: 'study', target, reward: 10 + i * 10
-  }))
-});
+## Añadir un perfil de bot
+
+1. Añade datos a tests/bot_profiles.js: id, label, aspiration, job, workEvery, careful.
+2. Implementa su política en runLife(tests/v 4_simulation.js) usando APIs reales. No inyectes dinero, romance, personas presentes ni eventos para aumentar cobertura.
+3. Dale al menos 20 semillas y 1080 días; usa un RNG de política separado del RNG narrativo guardado.
+4. Registra costes, fallos de acciones, estrés, dinero, relaciones, etapas, cierres, tamaño y repeticiones. Las pruebas dirigidas se publican aparte.
+5. Vuelve a generar el informe y explica cada evento no observado. No llames inalcanzable a una condición que el perfil simplemente no busca.
+
+```sh
+node tests/v4_simulation.js --days 1080 --seeds 20
+npm test > /tmp/v4-node.log
+npm run test:ui > /tmp/v4-ui.log
+python scripts/report-v4.py --node-log /tmp/v4-node.log --ui-log /tmp/v4-ui.log
 ```
 
-Las métricas existentes son `savings`, `skill` (creación), `friend`, `family` (confianza familiar media), `explore` y `study`. Para una métrica nueva, amplía `metric` en `systems.js`; la interfaz ya representa los tramos desde los datos. Añade eventos con `aspirations` y opciones exclusivas con el requisito correspondiente.
+El JSON detallado se genera en /tmp; reports/ conserva CSV pequeños por recorrido y frecuencias por evento, más el resumen de métricas. El informe distingue cobertura automática, pruebas dirigidas y análisis estático.
 
-El validador exige progreso para cada aspiración del catálogo. Si se amplía el catálogo después de publicar V3, añade una migración que rellene ese progreso en partidas existentes, o eleva el esquema; no rechaces partidas válidas de la versión publicada. Si cambias el número de tramos, actualiza también la validación, que actualmente admite 0 a 3.
+## Decisiones simples y límites
 
-## Guardado y migración
+- Calendario de 360 días/año; edad real sin aceleración. Juventud hasta 24, adultez 25–49, madurez 50–64 y vejez desde 65.
+- El ritmo por edad cambia recuperación nocturna, no añade costes ocultos a los botones. Estrés, enfermedad y mejoras también afectan a la recuperación.
+- Presión persistente, primer imprevisto grave en Equilibrada/Exigente y gastos posteriores por dificultad. Siempre puedes negociar o colaborar; esos caminos cuestan tiempo y tienen texto propio. El modo Tranquila reduce esa presión y no cobra gastos recurrentes ni interés.
+- Crédito de 250€ y 1 % semanal redondeado al euro; los impagos no crecen sin límite. El ahorro no produce ingresos automáticos.
+- Cambiar aspiraciones cuesta 1 h, 8 energía y 3 ánimo, con siete días entre cambios; reclamar un tramo añade la renuncia anunciada.
+- Legado: 90 días, o 30 días y tres tramos, más huella y bienestar. Deuda superior a 150€, gastos vencidos, salud/ánimo bajos o estrés≥85 pueden impedirlo. Revisarlo no termina forzosamente la vida.
+- Las parejas entre NPC son mutuas y no sustituyen decisiones románticas del jugador. Hay un periodo mínimo antes de que una revisión pueda terminarlas.
+- La formación de familia representa adopción/crianza compartida: pareja, tres citas, confianza 70 y 150€ iniciales. Familiares e hijos permanecen fuera de rutas íntimas incluso al crecer.
+- No hay muerte automática ni simulación médica exhaustiva. Un bot puede ganar dinero a costa de salud y vínculos; se informa de esa limitación.
 
-Se conserva `vinculos-save-v1`, y la aplicación completa guarda `version: 3`. Las versiones 1 y 2 pasan por la validación e hidratación anteriores y reciben `aspirations`, `direction` y `life`. La dificultad inicial es equilibrada, el sonido está apagado, el hogar es familiar, no hay mascota ni deuda nueva y la aspiración por defecto es estabilidad. El tutorial no se impone al migrar una partida antigua. El empleo inicial depende del itinerario laboral conservado.
+## Pruebas manuales
 
-Antes de persistir una migración local se guarda el texto original en `vinculos-save-v1-backup`. Las importaciones se validan antes de sustituir el estado; JSON mal formado, versiones desconocidas, referencias o rangos inválidos deben dejar la sesión intacta. `tests/fixtures/save-v1.json` y `tests/fixtures/save-v2.json` conservan partidas anteriores para comprobarlo. Los campos casuales y familiares antiguos se mantienen.
+1. Inicio: prueba los tres arranques y los cuatro escenarios; llega a la primera decisión sin navegar seis menús. Compara costes anunciados y resultado.
+2. Progresión: observa desbloqueos por necesidad y activa Ver todo. Tener un hijo o un libro debe abrir su pantalla aunque sea el primer día.
+3. Estrés/economía: deja obligaciones pendientes, descansa y comprueba que la carga sigue. Resuelve el mismo gasto por cada salida en copias separadas; compara horas, dinero y bienestar.
+4. Vínculos: observa un aviso de distancia, busca a la persona y consulta su expectativa y memoria. Verifica cambios propios en la prueba de 500 días.
+5. Legado: revisa un caso elegible y otro en mala situación. Exporta texto/SVG; empieza otra vida y contrasta carta, libro y recursos nuevos.
+6. Hogar/habilidades: mudanza, mejoras, mascota, gastos y práctica con decaimiento. Escenarios no deben reaplicarse al editar el perfil.
+7. Filtros: desactiva romance/casual/noche, incluidos eventos pendientes; no se borran recuerdos existentes. Ningún hijo o familiar puede activar esos caminos.
+8. Resumen: cada delta abre sus causas por teclado o toque; la suma coincide con el cambio neto. El Diario reconstruye resúmenes sin duplicar texto persistido.
+9. Persistencia: migra las tres versiones, prueba cuota llena y bloqueo, exporta y rechaza JSON mal formado sin cambios. Espera el indicador de guardado o cambia de pestaña para vaciar la cola.
+10. Acceso: 360 px, barra inferior, 44 px, foco visible, Tab/Enter/Escape, aria-current, meter y movimiento reducido. HTML de Release sin red y sitio estático bajo un subdirectorio.
 
-Si `localStorage` falla, no se promete un guardado que no ocurrió. La sesión puede seguir y exportarse. Al probar migración, exporta primero cualquier progreso que quieras conservar.
+## Entrega y Pages
 
-## Decisiones de diseño
+build-release.py genera HTML único, ZIP y un directorio site fuera del repositorio. Los scripts inline van al final del cuerpo: defer no funciona en un script inline. Nunca edites el HTML generado como si actualizara las fuentes automáticamente; regénéralo después de cambiar las fuentes.
 
-- El calendario tiene 360 días por año: doce meses de 30 días y cuatro estaciones de 90. Tres años completos son 1.080 días.
-- Las etapas son juventud hasta 24, adultez 25–49, madurez 50–64 y vejez desde 65. La edad avanza al ritmo del calendario. Su ritmo de energía se aplica a la recuperación nocturna, sin recargos ocultos por acción: antes de mejoras o enfermedad se recuperan 100, 97, 94 y 89 puntos respectivamente.
-- Cambiar de aspiraciones cuesta una hora, 8 de energía y 3 de ánimo; deben pasar siete días entre cambios. La primera configuración del personaje está exenta.
-- El legado se puede revisar desde el día 90, o desde el día 30 si se completaron tres tramos. Se guarda un cierre y puedes continuar.
-- Los gastos semanales son alquiler más 8 € de facturas y 12 € de comida, más mascota si la hay, ajustados por dificultad y noticias. El interés es un 1 % semanal redondeado al euro; la deuda no supera 250 €. La dificultad tranquila elimina cargos recurrentes e interés, incluidos cuidados familiares.
-- El hogar familiar cuesta menos y puede recuperarse sin coste de mudanza. El apoyo del barrio y la comida asistida permiten reponerse; comparten un uso diario. Los importes son euros ficticios, sin pagos reales.
-- La formación de familia representa un proyecto compartido de adopción o crianza: pareja estable, tres citas, confianza 70 y 150 € iniciales. Los cuidados cuestan 5 € diarios por hijo antes de aplicar dificultad.
-- Las habilidades van de 0 a 100; tras diez días sin practicar pierden 0,08 puntos diarios. A partir de 20 permiten proyectos propios. Las prácticas repetidas tienen rendimiento decreciente y límites diarios.
-- Activar trucos marca la partida para impedir nuevos logros, aunque luego se apaguen. Los logros no descubiertos no revelan requisitos.
-- Web Audio permanece apagado por defecto, no se inicia solo al recargar y se suspende al ocultar la pestaña. La preferencia de movimiento reducido impide activarlo.
+El workflow ejecuta pruebas, genera entregables, publica un Release y despliega Pages. Habilita Pages una sola vez en Settings → Pages → Source: GitHub Actions. Esa habilitación requiere administración; GITHUB_TOKEN no puede crear el sitio por sí solo. No se incluyen credenciales en el código.
 
-## Pruebas manuales de aceptación
-
-1. **Inicio y dirección:** crea un personaje con dos aspiraciones; cambia nombre, colores y rasgos antes de guardar. Comprueba que las elecciones se conservan. Completa y reclama una meta, y verifica que aparece el siguiente tramo. Cambia de aspiración y contrasta costes y espera de siete días.
-2. **Edad y legado:** prueba protagonistas de 19, 30, 55 y 70 años. Contrasta etapa, recuperación y eventos. Marca una entrada del Diario, abre el legado cuando esté disponible y continúa al día siguiente.
-3. **Economía:** aparta y retira ahorro, pide y devuelve deuda. No debe aceptarse un importe negativo, fraccionario, mayor que el saldo o que exceda el crédito. Al cerrar una semana, verifica balance, interés y resumen final guardado. Sin dinero, usa apoyo o comida asistida y regresa al hogar familiar.
-4. **Empleo:** cambia de oficio, viaja a su lugar y completa un turno dentro del horario. Comprueba sueldo, práctica y rendimiento. Alcanza un ascenso y verifica el nuevo salario. Tras ausencias prolongadas debe ser posible encontrar otro empleo.
-5. **Mundo vivo:** visita biblioteca, gimnasio y mercado, prueba sitios cerrados y espera explícitamente. Revisa noticias, clima, exámenes, vacaciones y cumpleaños. Una tormenta debe cerrar playa y azotea; la casa debe seguir accesible.
-6. **Profundidad:** practica una habilidad, abre un proyecto al llegar a 20 y comprueba decaimiento al abandonarla. Múdate, visita a tu familia en su casa, instala una mejora, adopta y nombra una mascota, y contrasta gastos y cuidados.
-7. **Experiencia:** cambia entre las tres dificultades. Salta y reinicia la introducción. Comprueba gráficos en Mi personaje y Diario. Activa sonido por gesto y ajusta volumen; recarga, oculta la pestaña y prueba movimiento reducido. Ninguno de estos casos debe iniciar audio inesperado.
-8. **Relaciones anteriores:** conversa con familia, colegas y compañeros. Comprueba citas, pareja, proyecto familiar, encuentros casuales e infidelidad. Cancelar sus confirmaciones debe dejar el estado intacto; familia e hijos no deben mostrar romance ni opciones casuales.
-9. **Narrativa:** abre un evento, comprueba costes y exclusivas, guarda pendiente y recarga. Repite semilla y decisiones. Recorre una cadena y verifica retardo, referencias a la decisión anterior y posibilidad de cerrar el intento.
-10. **Persistencia y acceso:** importa V1 y V2, exporta V3 e importa de nuevo; rechaza JSON inválido sin cambios. Recorre las seis rutas, Atrás/Adelante, Tab/Mayús+Tab/Enter/Escape y retorno del foco. Prueba móvil de 360 px, controles de 44 px, medidores con nombre/valor, sin desbordamiento ni errores de consola. El juego debe seguir funcionando sin Internet externo.
-
-## Evidencia y límites
-
-Las suites Chromium pasan 249 comprobaciones: 140 generales, 44 nocturnas y 65 V3. Las suites Node pasan 80 pruebas: 31 de motor, 15 de narrativa, 5 de ampliación, 13 nocturnas y 16 de sistemas V3.
-
-El ensayo `tests/v3_simulation.js` realiza 1.080 días × 20 semillas × seis aspiraciones, 129.600 días en 120 recorridos. El piloto usa acciones, gastos y eventos reales, clona la partida de origen, comprueba que no cambie y repite una secuencia inicial para confirmar determinismo. Usa edades iniciales 23, 27, 49, 63 y 68, sin acelerar el envejecimiento; informa exposición real por etapa.
-
-El informe [BALANCE_V3_REPORT.md](BALANCE_V3_REPORT.md) enumera repeticiones semanales, eventos no observados, días en extremos 0/100, dinero, ahorro, deuda, legados y etapas. El JSON detallado se genera en `/tmp/vinculos-v3-balance.json`. La política no demuestra equilibrio para todas las decisiones: 32 eventos no aparecieron y ramas como intimidad, infidelidad o adopción se verifican con pruebas dirigidas. No atribuyas esas ramas al piloto general. Tras cambios de reglas, pesos o costes, repite el ensayo afectado.
+verify-pages.py verifica HTTP 200 y las huellas de los ocho archivos públicos. Solo después guarda DEPLOYMENT.json. El workflow ignora los commits que cambian únicamente esa evidencia para evitar bucles. Una URL prevista o un archivo workflow no prueban que el despliegue haya terminado.

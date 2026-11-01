@@ -54,7 +54,7 @@
   game.autosaveDeferred=true;
   window.addEventListener('pagehide',()=>{if(game.savePending)game.flushSave();});
   window.addEventListener('vinculos:save-pending',()=>updateSaveStatus());
-  window.addEventListener('vinculos:saved',()=>{updateSaveStatus();if(!game.lastSaveSucceeded&&!$('#persistent-save-error'))main.insertAdjacentHTML('afterbegin','<div id="persistent-save-error" class="notice" role="alert">No se pudo guardar. Tu sesión sigue abierta. <button class="button secondary" id="export-save">Exportar ahora</button></div>');});
+  window.addEventListener('vinculos:saved',()=>{updateSaveStatus();if(!game.lastSaveSucceeded&&!$('#persistent-save-error'))main.insertAdjacentHTML('afterbegin','<div id="persistent-save-error" class="notice" role="alert">No se pudo guardar. Tu sesión sigue abierta. <button class="button secondary" data-export-now>Exportar ahora</button></div>');});
   document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.savePending)game.flushSave();});
   const data = window.VINCULOS_DATA;
   const routes = {today:'hoy',map:'explorar',people:'relaciones',family:'familia',character:'personaje',journal:'diario'};
@@ -288,7 +288,7 @@
   }
   function renderLegacyPanel() {
     const l=game.getLegacy();
-    return `<section class="legacy-panel panel content-section"><div class="eyebrow">LO QUE VA QUEDANDO</div><h2>${escape(l.title)}</h2><p>${l.reached?escape(l.text):'Un legado necesita tiempo, algo que hayas construido y margen para mirar atrás. No se alcanza solo por esperar.'}</p>${!l.available?`<ul>${l.reasons.map(r=>`<li>${escape(r)}</li>`).join('')}</ul>`:''}<button class="button secondary" id="legacy-review" ${!l.available?'disabled':''}>${l.reached?'Revisar mi legado':'Reunir mi historia'}</button></section><section class="panel content-section"><h2>Libro de vidas</h2>${game.state.direction.book.length?game.state.direction.book.map(b=>`<article><h3>${escape(b.title)}</h3><p>${escape(b.name)} · ${b.day} días</p><p>${escape(b.text)}</p></article>`).join(''):'<p>Tus cierres anteriores encontrarán aquí su lugar.</p>'}</section>`;
+    return `<section class="legacy-panel panel content-section"><div class="eyebrow">LO QUE VA QUEDANDO</div><h2>${escape(l.title)}</h2><p>${l.reached?escape(l.text):'Un legado necesita tiempo, algo que hayas construido y margen para mirar atrás. No se alcanza solo por esperar.'}</p>${!l.available?`<ul>${l.reasons.map(r=>`<li>${escape(r)}</li>`).join('')}</ul>`:''}<button class="button secondary" id="legacy-review" ${!l.available&&!l.reached?'disabled':''}>${l.reached?'Revisar mi legado':'Reunir mi historia'}</button></section><section class="panel content-section"><h2>Libro de vidas</h2>${game.state.direction.book.length?game.state.direction.book.map(b=>`<article><h3>${escape(b.title)}</h3><p>${escape(b.name)} · ${b.day} días</p><p>${escape(b.text)}</p></article>`).join(''):'<p>Tus cierres anteriores encontrarán aquí su lugar.</p>'}</section>`;
   }
   function showLegacy() {
     const l=game.getLegacy();
@@ -343,7 +343,7 @@
     for(const el of $$('.nav-item[data-view]'))el.hidden=['family','character','journal'].includes(el.dataset.view)&&!unlocked[el.dataset.view];
     $('.nav-list').style.setProperty('--visible-tabs',String($$('.nav-list .nav-item:not([hidden])').length));
     if(view==='today')main.insertAdjacentHTML('afterbegin',renderFirstDecision()+renderPressure());
-    if(!game.lastSaveSucceeded)main.insertAdjacentHTML('afterbegin','<div class="notice" role="alert"><strong>No se pudo guardar en este navegador.</strong> La sesión sigue abierta. <button class="button secondary" id="export-save">Exportar ahora</button></div>');
+    if(!game.lastSaveSucceeded)main.insertAdjacentHTML('afterbegin','<div id="persistent-save-error" class="notice" role="alert"><strong>No se pudo guardar en este navegador.</strong> La sesión sigue abierta. <button class="button secondary" data-export-now>Exportar ahora</button></div>');
     hydrateIcons();
     hydrateMeters();
   }
@@ -425,11 +425,13 @@
   }
 
   function renderJournal() {
-    const entries=game.state.journal.filter(e=>(!journalPerson || e.npcId===journalPerson || e.people?.includes(journalPerson) || e.text.includes(game.getNPC(journalPerson)?.name)) && (!journalTag || e.kind===journalTag || e.tags?.includes(journalTag)));
-    const tags=[...new Set(game.state.journal.flatMap(e=>[e.kind,...(e.tags||[])]))];
+    const days=game.state.summaries.map(s=>({day:s.day,hour:23,title:'Así fue el día '+s.day,text:`${s.highlight} Ingresos: ${money(s.earned)}. Gastos: ${money(s.spent)}. ${s.actions.slice(0,3).join(' ')}`,kind:'summary',tags:['summary','resumen'],npcId:null}));
+    const journal=game.state.journal.concat(days).sort((a,b)=>b.day-a.day||b.hour-a.hour);
+    const entries=journal.filter(e=>(!journalPerson || e.npcId===journalPerson || e.people?.includes(journalPerson) || e.text.includes(game.getNPC(journalPerson)?.name)) && (!journalTag || e.kind===journalTag || e.tags?.includes(journalTag)));
+    const tags=[...new Set(journal.flatMap(e=>[e.kind,...(e.tags||[])]))];
     return heading('LOS MOMENTOS QUE SE QUEDAN','Tu diario','Una vida no se mide solo en días, sino en lo que pasa dentro de ellos.')
       + renderLegacyPanel() + renderMemories() + renderTrends() + `<div class="journal-filters"><label class="form-field">Persona<select id="journal-person"><option value="">Todas las personas</option>${data.npcs.map(n=>`<option value="${n.id}" ${journalPerson===n.id?'selected':''}>${escape(n.name)}</option>`).join('')}</select></label><label class="form-field">Tema<select id="journal-tag"><option value="">Todos los temas</option>${tags.map(tag=>`<option value="${escape(tag)}" ${journalTag===tag?'selected':''}>${escape(tagNames[tag]||tag)}</option>`).join('')}</select></label></div>` + renderAnnualSummary()
-      + `<div class="journal-list">${entries.length ? entries.map(e=>`<article class="journal-entry"><div class="journal-date"><strong>Día ${e.day}</strong><span>${formatHour(e.hour)}</span></div><div class="journal-dot">${icon(e.kind==='romance'?'heart':e.kind==='travel'?'pin':e.kind==='achievement'?'star':e.kind==='family'?'home':'leaf')}</div><div class="journal-body"><h3>${escape(e.title)}</h3>${e.npcId?`<span class="journal-person-label">${escape(game.getNPC(e.npcId)?.name || '')}</span>`:''}<p>${escape(e.text)}</p><button class="text-button memory-star" data-memory-index="${game.state.journal.indexOf(e)}" aria-label="Marcar recuerdo: ${escape(e.title)}">${icon('star')} Guardar recuerdo</button>${e.tags?.length?`<div class="event-tags">${e.tags.map(t=>`<span class="trait-chip">${escape(tagNames[t]||t)}</span>`).join('')}</div>`:''}</div></article>`).join('') : '<div class="empty-state">Tu primer recuerdo está a una decisión de distancia.</div>'}</div>`;
+      + `<div class="journal-list">${entries.length ? entries.map(e=>`<article class="journal-entry"><div class="journal-date"><strong>Día ${e.day}</strong><span>${formatHour(e.hour)}</span></div><div class="journal-dot">${icon(e.kind==='romance'?'heart':e.kind==='travel'?'pin':e.kind==='achievement'?'star':e.kind==='family'?'home':'leaf')}</div><div class="journal-body"><h3>${escape(e.title)}</h3>${e.npcId?`<span class="journal-person-label">${escape(game.getNPC(e.npcId)?.name || '')}</span>`:''}<p>${escape(e.text)}</p>${game.state.journal.indexOf(e)>=0?`<button class="text-button memory-star" data-memory-index="${game.state.journal.indexOf(e)}" aria-label="Marcar recuerdo: ${escape(e.title)}">${icon('star')} Guardar recuerdo</button>`:'<small>Resumen reconstruido del registro diario, sin duplicar su texto en el guardado.</small>'}${e.tags?.length?`<div class="event-tags">${e.tags.map(t=>`<span class="trait-chip">${escape(tagNames[t]||t)}</span>`).join('')}</div>`:''}</div></article>`).join('') : '<div class="empty-state">Tu primer recuerdo está a una decisión de distancia.</div>'}</div>`;
   }
   function formatHour(hour) {const minutes=Math.round(hour*60);return `${String(Math.floor(minutes/60)).padStart(2,'0')}:${String(minutes%60).padStart(2,'0')}`;}
 
@@ -578,6 +580,7 @@
     if(button.matches('a.brand')) {event.preventDefault();navigate('today');return;}
     if(button.dataset.view) return navigate(button.dataset.view);
     if(button.dataset.aspiration){syncCreatorFields();const id=button.dataset.aspiration;if(creatorDraft.aspirationIds.includes(id)){if(creatorDraft.aspirationIds.length===1)return toast('Conserva al menos una aspiración.',true);creatorDraft.aspirationIds=creatorDraft.aspirationIds.filter(x=>x!==id);}else if(creatorDraft.aspirationIds.length<2)creatorDraft.aspirationIds.push(id);else return toast('Puedes elegir hasta dos aspiraciones.',true);showCreator();return;}
+    if(button.hasAttribute('data-export-now')){downloadText(game.exportSave(),`vinculos-dia-${game.state.day}.json`,'application/json');return;}
     if(button.dataset.startPreset){const r=game.startPreset(button.dataset.startPreset,$('#start-scenario')?.value||undefined);if(r.ok){closeDialog();render();}else toast(r.message,true);return;}
     if(button.dataset.firstChoice)return run(game.lifeAction('firstChoice',{id:button.dataset.firstChoice}));
     if(button.dataset.legacyExport){const format=button.dataset.legacyExport;downloadText(game.exportLegacy(format),'mi-legado.'+(format==='svg'?'svg':'txt'),format==='svg'?'image/svg+xml':'text/plain');return;}

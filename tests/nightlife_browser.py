@@ -39,6 +39,7 @@ def prepare_full_ui(page):
         page.locator('#settings-top-button:visible, #settings-button:visible').first.click()
         page.locator('#show-all-systems').check()
         page.keyboard.press('Escape')
+        page.wait_for_function("!document.querySelector('#save-status')?.textContent.includes('Guardando los cambios')")
 
 
 def state(page):
@@ -116,7 +117,7 @@ def main():
                 page=context.new_page()
                 observe(page)
                 page.goto(url)
-    prepare_full_ui(page)
+                prepare_full_ui(page)
                 page.locator('.hero-card').wait_for()
                 if page.locator('#dismiss-first-save').count():
                     page.locator('#dismiss-first-save').click()

@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "node server.js",
     "start": "node server.js",
-    "test": "node tests/engine.test.js && node tests/narrative.test.js && node tests/expansion.test.js && node tests/nightlife.test.js && node tests/v3_engine.test.js && node tests/v4.test.js && node tests/storage.test.js && node tests/content_safety.test.js && node tests/catalog_audit.js",
-    "test:ui": "python tests/browser_smoke.py && python tests/nightlife_browser.py && python tests/v3_browser.py",
+    "test": "node tests/engine.test.js && node tests/narrative.test.js && node tests/expansion.test.js && node tests/nightlife.test.js && node tests/v3_engine.test.js && node tests/v4.test.js && node tests/storage.test.js && node tests/content_safety.test.js && node tests/catalog_audit.js && node tests/rare_routes.test.js",
+    "test:ui": "python tests/browser_smoke.py && python tests/nightlife_browser.py && python tests/v3_browser.py && python tests/v4_browser.py && python tests/standalone_browser.py && python tests/contrast_browser.py",
     "test:sim": "node tests/v4_simulation.js --days 1080 --seeds 20",
     "test:sim:legacy": "node tests/simulation.js",
-    "test:sim:smoke": "node tests/v4_smoke_simulation.js"
+    "test:sim:smoke": "node tests/v4_smoke_simulation.js",
+    "build:release": "python scripts/build-release.py"
   },
   "engines": {
     "node": ">=18"

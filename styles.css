@@ -1828,3 +1828,6 @@ button.tutorial-step { min-height: 44px; min-width: 44px; }
 .button,.text-button,summary {min-height:44px;}
 @media(max-width:900px){.sidebar .nav-list {grid-template-columns:repeat(var(--visible-tabs,6),minmax(0,1fr));}}
 @media(max-width:600px){.summary-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.summary-dialog {width:calc(100% - 20px);}.start-card {padding:17px;}.start-card span {font-size:13px;}}
+
+/* Los cambios de pestaña conservan contraste AA también durante la transición. */
+.nav-item {transition:none;}

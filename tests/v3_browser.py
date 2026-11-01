@@ -39,6 +39,7 @@ def prepare_full_ui(page):
         page.locator('#settings-top-button:visible, #settings-button:visible').first.click()
         page.locator('#show-all-systems').check()
         page.keyboard.press('Escape')
+        page.wait_for_function("!document.querySelector('#save-status')?.textContent.includes('Guardando los cambios')")
 
 
 def state(page):

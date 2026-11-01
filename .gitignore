@@ -2,3 +2,9 @@ __pycache__/
 *.py[cod]
 .DS_Store
 node_modules/
+
+# Entregables generados: se publican en Releases, no en main.
+Vinculos-V*.html
+vinculos-v*.zip
+Vinculos-V*.zip
+dist/

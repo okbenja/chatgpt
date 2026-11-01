@@ -6,7 +6,7 @@ const D=VINCULOS_DATA;
 const param=(id,def)=>{const i=process.argv.indexOf(id);return i<0?def:process.argv[i+1];};
 const days=Number(param('--days',1080)),seeds=Number(param('--seeds',20)),folder='/tmp/vinculos-v3-sim';fs.mkdirSync(folder,{recursive:true});
 function make(asp,seed,age){const g=new Game(null);g.create({name:'Vera',age,aspirationIds:[asp],path:'free'},{seed});g.save=()=>true;return g;}
-function simulate(source,days,seed){
+function simulate(source,days,seed,options={}){
  const g=new Game(null);g.state=JSON.parse(source.exportSave());g.state.rngState=seed>>>0;g.save=()=>true;g._trackBaseline();
  const result={seed,aspiration:g.state.aspirations[0],days:0,events:{},repeatedPerWeek:0,maxRepeat:0,stages:{},stats:{},economy:{min:g.state.money,max:g.state.money,zeroDays:0,debtMax:0,ending:0,savings:0},legacyDay:null,errors:[]};
  for(const key of Object.keys(g.state.stats))result.stats[key]={zero:0,hundred:0};
@@ -43,6 +43,7 @@ function simulate(source,days,seed){
   result.days++;result.economy.min=Math.min(result.economy.min,g.state.money);result.economy.max=Math.max(result.economy.max,g.state.money);if(!g.state.money)result.economy.zeroDays++;result.economy.debtMax=Math.max(result.economy.debtMax,g.state.life.economy.debt);
  }
  result.economy.ending=g.state.money;result.economy.savings=g.state.life.economy.savings;result.legacyDay=g.state.direction.legacy.reached?g.state.direction.legacy.day:null;
+ if(options.captureSave)result.finalSave=g.exportSave();
  result.finalStage=g.getLifeStage();result.finalSaveBytes=g.exportSave().length;result.completedGoals=Object.values(g.state.direction.progress).reduce((n,p)=>n+p.stage,0);
  return result;
 }

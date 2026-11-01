@@ -45,6 +45,7 @@ def prepare_full_ui(page):
         page.locator('#settings-top-button:visible, #settings-button:visible').first.click()
         page.locator('#show-all-systems').check()
         page.keyboard.press('Escape')
+        page.wait_for_function("!document.querySelector('#save-status')?.textContent.includes('Guardando los cambios')")
 
 
 def state(page):
@@ -332,8 +333,8 @@ def full_game(browser, url, through3=False):
     page.locator('#confirm-sleep').click()
     check(state(page)['day'] == old_day + 1 and state(page)['hour'] == 9,
           'confirmed rest begins next morning')
-    check(len(state(page)['summaries']) >= 1 and any(e['kind'] == 'summary' for e in state(page)['journal']),
-          'completed day is saved in summaries and narrative journal')
+    check(len(state(page)['summaries']) >= 1 and len(state(page)['life']['archive']['months']) >= 1,
+          'completed day is saved in detailed summaries and the monthly archive')
     check(page.locator('#day-summary [data-close]').count()==1, 'rest exposes the final persisted day summary before continuing')
     expense_text=page.locator('#day-summary .summary-economy > span').nth(1).inner_text()
     expense_value=float(re.findall(r'[0-9][0-9.,]*',expense_text)[0].replace('.','').replace(',','.'))

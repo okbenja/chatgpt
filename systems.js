@@ -16,6 +16,12 @@
     s.life={economy:{savings:0,debt:0,creditLimit:250,lastBilledDay:Math.max(0,s.day-1),transactions:[],weeks:[]},employment:{jobId:s.profile.path==='work'?'nexo':'none',status:s.profile.path==='work'?'employed':'unemployed',performance:60,lastWorkedDay:0,missedShifts:0},skills:Object.fromEntries(defs(g).skills.map(k=>[k.id,{xp:0,lastPracticeDay:0}])),home:{type:'familiar',roommateId:'hermana',upgrades:[],lastMoveDay:0},pet:null,world:{weather:'despejado',news:[],lastUpdatedDay:s.day},annual:{},wellbeing:{nutrition:65,movement:50,rest:75,illness:0},history:[]};
     for(const a of defs(g).aspirations)s.direction.progress[a.id]={stage:0};
     if(input.version>=3){validate(g,input);s.aspirations=clone(input.aspirations);s.direction=clone(input.direction);s.life=clone(input.life);s.life.annual=s.life.annual||{};}
+    if(input.version===4){const legacy=s.direction.legacy;
+      if(legacy.type!==undefined&&(typeof legacy.type!=='string'||legacy.type.length>80))throw Error('Tipo de legado inválido');
+      if(legacy.timeline!==undefined&&(!Array.isArray(legacy.timeline)||legacy.timeline.length>12||legacy.timeline.some(m=>!m||!Number.isInteger(m.day)||m.day<1||m.day>s.day||typeof m.title!=='string'||m.title.length>140||typeof m.quote!=='string'||m.quote.length>230)))throw Error('Momentos de legado inválidos');
+      if(legacy.people!==undefined&&(!Array.isArray(legacy.people)||legacy.people.length>5||legacy.people.some(p=>!p||!s.relationships[p.id]||typeof p.name!=='string'||p.name.length>80||typeof p.quote!=='string'||p.quote.length>200)))throw Error('Personas de legado inválidas');
+      if(legacy.unresolved!==undefined&&(!Array.isArray(legacy.unresolved)||legacy.unresolved.length>8||legacy.unresolved.some(t=>typeof t!=='string'||t.length>300)))throw Error('Asuntos pendientes inválidos');
+    }
     const settings=s.direction.settings;
     for(const key of ['nightlife','romance','casual','showAllSystems']) {
       if(settings[key]!==undefined&&typeof settings[key]!=='boolean')throw Error('Ajuste de contenido inválido');
@@ -110,6 +116,7 @@
   }
   function reviewLegacy(g) {
     const s=g.state,check=legacy(g);
+    if(s.direction.legacy.reached&&!check.available)return {ok:true,message:'Puedes revisar el cierre que ya guardaste. Habrá otra revisión cuando recuperes margen.'};
     if(!check.available)return fail('Este cierre todavía no está listo. '+check.reasons.join(' '));
     if(s.direction.legacy.reached&&s.direction.legacy.day===s.day)return {ok:true,message:'Puedes revisar el legado guardado y seguir viviendo.'};
     const portrait=legacyPortrait(g);
@@ -190,7 +197,7 @@
     if(changes.skill){const k=l.skills[changes.skill];k.xp=cap(k.xp+6*(1-k.xp/110)*scenarioRule(g,'practiceFactor'));k.lastPracticeDay=s.day;s.daily.actions['skill_'+changes.skill]=(s.daily.actions['skill_'+changes.skill]||0)+1;}
     if(changes.job){l.employment={jobId:changes.job.id,status:changes.job.id==='autonomo'?'self_employed':'employed',performance:60,lastWorkedDay:0,missedShifts:0};s.profile.path='work';s.career.level=0;s.career.experience=0;}
     if(changes.work){l.employment.lastWorkedDay=s.day;l.employment.missedShifts=0;l.employment.performance=cap(l.employment.performance+3+l.skills[changes.work.skill].xp/30);s.daily.workHours+=duration;s.counters.work++;s.career.experience+=Math.round(duration*3*scenarioRule(g,'experienceFactor'));l.skills[changes.work.skill].xp=cap(l.skills[changes.work.skill].xp+2);l.skills[changes.work.skill].lastPracticeDay=s.day;}
-    if(changes.promotion){s.career.level++;s.career.promotions.push({day:s.day,level:s.career.level});}
+    if(changes.promotion){s.career.level++;s.career.promotions.push({day:s.day,level:s.career.level});s.career.promotions=s.career.promotions.slice(-4);}
     if(changes.home)l.home={type:changes.home.id,roommateId:changes.home.roommateId,upgrades:[],lastMoveDay:s.day};
     if(changes.upgrade)l.home.upgrades.push(changes.upgrade);
     if(changes.pet)l.pet=changes.pet;
@@ -401,7 +408,7 @@
   }
   function unlocks(g) {
     const s=g.state,all=s.direction.settings.showAllSystems;
-    return {economy:all||s.day>=4||s.money<60||s.life.pressure.expenses.length>0,work:all||s.day>=7||s.profile.path==='work',home:all||s.day>=14||s.life.home.type!=='familiar',pet:all||s.day>=21||!!s.life.pet,skills:all||s.day>=2,character:all||s.day>=2,family:all||s.day>=3,journal:all||s.day>=2};
+    return {economy:all||s.day>=4||s.money<60||s.life.pressure.expenses.length>0,work:all||s.day>=7||s.profile.path==='work',home:all||s.day>=14||s.life.home.type!=='familiar',pet:all||s.day>=21||!!s.life.pet,skills:all||s.day>=2,character:all||s.day>=2||s.profile.path==='work'||s.life.home.type!=='familiar',family:all||s.day>=3||s.family.children.length>0,journal:all||s.day>=2||s.direction.book.length>0||s.direction.memories.length>0};
   }
   function start(g,id,scenarioId) {
     if(scenarioId&&!defs(g).startScenarios.some(x=>x.id===scenarioId))return fail('Elige un escenario válido.');
