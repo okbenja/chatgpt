@@ -230,7 +230,7 @@
         !Array.isArray(saved.history) || saved.history.length>60 ||
         !Array.isArray(saved.warnings) || saved.warnings.length>20 ||
         !finite(saved.crises) || saved.crises<0 || !finite(saved.helpCount) || saved.helpCount<0)throw Error('Presión inválida');
-      for(const b of saved.expenses)if(!defs(g).expenseCatalog.some(x=>x.id===b.kind)||!finite(b.amount)||b.amount<0||b.amount>1000||!Number.isInteger(b.day)||b.day<1||b.day>s.day||!Number.isInteger(b.dueDay)||b.dueDay<b.day)throw Error('Gasto inválido');
+      for(const b of saved.expenses)if(!defs(g).expenseCatalog.some(x=>x.id===b.kind)||!finite(b.amount)||b.amount<0||b.amount>2000||!Number.isInteger(b.day)||b.day<1||b.day>s.day||!Number.isInteger(b.dueDay)||b.dueDay<b.day)throw Error('Gasto inválido');
       for(const w of saved.warnings)if(typeof w.npcId!=='string'||!s.relationships[w.npcId]||!finite(w.day)||w.day>s.day)throw Error('Aviso inválido');
       for(const h of saved.history)if(!finite(h.day)||h.day>s.day||typeof h.text!=='string'||h.text.length>500)throw Error('Historial inválido');
     }

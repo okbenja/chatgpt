@@ -33,3 +33,4 @@
 - Tres arranques preparados y personalización, dos renuncias visibles antes de explorar y tutorial de tres pasos. Sistemas y pestañas progresivos; opción explícita de ver todo.
 - Resumen único con causas por estadística accesibles al tocar o pasar el cursor. Barras con meter, aria-current, estado plegable y navegación inferior de44px a360px.
 - Verificación:92 pruebas Node más auditoría,42 comprobaciones nuevas de navegador y65 regresiones de sistemas;270 días de simulación corta. Guardado sigue bajo los umbrales de10años.
+- Corrección de validación: el límite de gastos importados admite también el primer imprevisto grave en dificultad exigente. Repetidas todas las pruebas y el diagnóstico antes de continuar.
