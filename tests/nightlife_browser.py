@@ -223,7 +223,7 @@ def main():
                 old=json.loads((ROOT/'tests/fixtures/save-v1.json').read_text())
                 import_save(page,old)
                 migrated=state(page)
-                check(migrated['version']==3 and migrated['profile']['name']==old['profile']['name'],'the original save still migrates after nightlife expansion')
+                check(migrated['version']==4 and migrated['profile']['name']==old['profile']['name'],'the original save still migrates after nightlife expansion')
                 check(migrated['relationships']['madre']['trust']==old['relationships']['madre']['trust'] and 'celia' in migrated['relationships'],'migration preserves established bonds and adds nightlife acquaintances')
                 seed=fresh_evening(page)
                 import_save(page,seed)

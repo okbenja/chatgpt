@@ -1062,3 +1062,39 @@ window.VINCULOS_DATA = {
 (() => {
  for(const k of window.VINCULOS_DATA.skills){k.advancedAt=20;k.advancedLabel='Crear un proyecto de '+k.label.toLowerCase();}
 })();
+
+/* V4: presión configurable y decisiones con renuncia. */
+(function(d){
+  d.pressureRules = {
+    tranquila: {minDays:45, maxDays:65, expenseFactor:.35, loadFactor:.55, recovery:12},
+    equilibrada: {minDays:18, maxDays:30, expenseFactor:1, loadFactor:1, recovery:8},
+    exigente: {minDays:12, maxDays:22, expenseFactor:1.35, loadFactor:1.3, recovery:6}
+  };
+  d.expenseCatalog = [
+    {id:'reparacion',title:'La nevera deja de enfriar',text:'El arreglo no puede esperar muchas semanas. Puedes pagarlo, negociar o buscar una reparación compartida.',amount:190},
+    {id:'salud',title:'Una consulta que no esperabas',text:'Una molestia necesita revisión y tratamiento. El centro del barrio ofrece una alternativa con más espera.',amount:155},
+    {id:'impuesto',title:'Un ajuste en las cuentas',text:'Ha llegado una regularización. Toca revisar prioridades y encontrar margen.',amount:230},
+    {id:'alquiler',title:'La aportación al hogar cambia',text:'Una reparación del edificio obliga a repartir un gasto extraordinario.',amount:210},
+    {id:'amigo',title:'Alguien pide una mano',text:'Una persona cercana atraviesa una mala racha. Ayudar no tiene por qué significar resolverlo todo con dinero.',amount:140}
+  ];
+  d.aspirationTradeoffs = {
+    estabilidad:{text:'Revisar cuentas: 1 h, 4 de energía y +3 de estrés.',duration:1,energy:4,stats:{stress:3}},
+    creatividad:{text:'Cerrar el proyecto: 2 h, 10 de energía y +5 de estrés.',duration:2,energy:10,stats:{stress:5}},
+    comunidad:{text:'Organizar el encuentro: 2 h y 10 de energía; hoy queda menos tiempo para tus proyectos.',duration:2,energy:10,stats:{stress:2}},
+    familia:{text:'Reservar una tarde de cuidados: 2 h, 8 de energía y 5 €.',duration:2,energy:8,cost:5,stats:{stress:3}},
+    aventura:{text:'Preparar la salida: 1 h, 8 de energía y 15 € de tu colchón.',duration:1,energy:8,cost:15,stats:{stress:2}},
+    conocimiento:{text:'Terminar la entrega: 2 h, 12 de energía y +5 de estrés.',duration:2,energy:12,stats:{stress:5}}
+  };
+  const stages=['juventud','adultez','madurez','vejez'];
+  const scenes=[
+    ['v4_sobrecarga','Demasiadas pestañas abiertas','Intentas concentrarte, pero cada pendiente abre otro. Hoy no cabe todo.',{stats:{stress:{min:55}}},'salud'],
+    ['v4_cumple_turno','Dos planes a la misma hora','Un turno extra coincide con el cumpleaños de Valentina. Puedes ganar dinero o estar presente.',{jobs:['nexo','hosteleria','autonomo','creativo']},'trabajo'],
+    ['v4_deuda_llamada','Una llamada pendiente','La deuda ocupa espacio incluso cuando no estás haciendo cuentas.',{economy:{debt:{min:1}}},'dinero'],
+    ['v4_ascenso_familia','Una propuesta con letra pequeña','Un proyecto puede acercarte a un ascenso, pero te ocuparía la tarde que prometiste a tu familia.',{jobs:['nexo','creativo']},'familia']
+  ];
+  for(const [id,title,text,conditions,tag] of scenes)d.events.push({id,title,text,variants:[text+' Te das un momento para decidir qué puedes sostener.'],introducedIn:4,tags:[tag,'decision'],conditions:{...conditions,lifeStages:stages},weight:4,cooldown:30,maxOccurrences:8,options:[
+    {id:'proyecto',text:'Priorizar ingresos o avance; renunciar al rato compartido',duration:3,energyCost:18,results:[{id:'avance',weight:2,quality:'positive',text:'El trabajo avanza. Explicas la ausencia; no borra lo que la otra persona esperaba.',effects:{money:65,performance:5,stats:{stress:12},relationships:{valentina:{friendship:-4,trust:-2},madre:{trust:-2}}}}]},
+    {id:'vinculo',text:'Cuidar el vínculo; dejar pasar el ingreso de hoy',duration:2,energyCost:8,results:[{id:'presencia',weight:2,quality:'positive',text:'Llegas con tiempo para escuchar. El pendiente económico sigue esperando, pero no estás a solas.',effects:{stats:{stress:-7,mood:4},relationships:{valentina:{friendship:6,trust:4},madre:{trust:3}}}}]},
+    {id:'limite',text:'Proponer otro día y descansar; aceptar la decepción',duration:1,results:[{id:'pausa',weight:1,quality:'negative',text:'No todo el mundo recibe bien el cambio. Aun así, poner un límite deja espacio para recuperarte.',effects:{stats:{energy:12,stress:-10},relationships:{valentina:{friendship:-2}}}}]}
+  ]});
+})(window.VINCULOS_DATA);

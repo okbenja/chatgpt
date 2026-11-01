@@ -227,6 +227,7 @@
       if (modifier.conditions) value = requirements(game, modifier.conditions).ok ? 1 : 0;
       weight *= Math.max(0.05, 1 + value * (Number(modifier.factor) || 0));
     }
+    if(game.state.version>=4&&game.state.stats.stress>50){const quality=result.quality||((result.effects?.stats?.mood||0)>=0?'positive':'negative');const strain=(game.state.stats.stress-50)/65;weight*=quality==='negative'?1+strain:Math.max(.25,1-strain);}
     return Math.max(0.001, weight);
   }
 

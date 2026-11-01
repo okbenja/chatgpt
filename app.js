@@ -267,6 +267,13 @@
     if(type==='adoptPet'){payload.id=$('#pet-kind').value;payload.name=$('#pet-name').value;}
     run(game.lifeAction(type,payload));
   }
+  function renderPressure() {
+    const p=game.state.life.pressure,b=p.expenses[0];
+    const notices=p.warnings.map(w=>`<p>${escape(game.getNPC(w.npcId).name)} echa de menos compartir tiempo. <button class="text-button" data-npc="${w.npcId}">Buscar un momento</button></p>`).join('');
+    if(!b&&!notices&&game.state.stats.stress<55)return '';
+    const item=b?data.expenseCatalog.find(x=>x.id===b.kind):null;
+    return `<section class="panel pressure-panel content-section"><h2>${item?escape(item.title):'Tu agenda también pesa'}</h2>${b?`<p>${escape(item.text)} · ${money(b.amount)} · plazo: día ${b.dueDay}.</p><div class="system-actions"><button class="button secondary" data-expense-choice="pay">Pagar ${money(b.amount)} · 30 min · 2 energía</button><button class="button secondary" data-expense-choice="negotiate">Negociar ${money(Math.round(b.amount*.45))} · 2 h · 12 energía · +3 estrés</button><button class="button secondary" data-expense-choice="help">Pedir apoyo · 3 h · 12 energía · +6 estrés y −2 ánimo</button></div>`:''}<p>Las obligaciones no desaparecen al dormir. El estrés alto reduce la recuperación, el ánimo y las probabilidades de que un proyecto salga bien.</p>${notices}</section>`;
+  }
   function renderLegacyPanel() {
     const l=game.getLegacy();
     return `<section class="legacy-panel panel content-section"><div class="eyebrow">UN CIERRE POSIBLE</div><h2>${escape(l.title)}</h2><p>${l.reached?escape(l.text):'Al vivir 90 días, o completar tres tramos de aspiración y 30 días, podrás reunir tu historia en un hito de legado. Después podrás seguir jugando.'}</p><button class="button secondary" id="legacy-review" ${!l.available?'disabled':''}>${l.reached?'Revisar mi legado':'Reunir mi historia'}</button></section>`;
@@ -310,11 +317,12 @@
     $('#cheat-indicator').hidden = !s.flags.cheats;
     updateSaveStatus();
     const goals = game.getGoals();
-    $('#goals-list').innerHTML = goals.map(g => `<div class="goal-item ${g.claimed ? 'claimed' : ''}"><span class="goal-icon ${g.complete ? 'complete' : ''}">${icon(g.complete ? 'check' : g.type === 'date' ? 'heart' : g.type === 'study' ? 'book' : g.type === 'work' ? 'briefcase' : 'chat')}</span><div class="goal-info"><strong>${escape(g.title)}</strong><span>${g.claimed ? '¡Objetivo conseguido!' : `${Math.min(g.progress,g.target)} de ${g.target} · +${money(g.reward)}`}</span>${g.complete && !g.claimed ? `<button class="text-button" data-claim="${g.id}">Recoger recompensa ${icon('arrow')}</button>` : `<div class="goal-progress"><span style="width:${Math.min(100,g.progress / g.target * 100)}%"></span></div>`}</div></div>`).join('');
+    $('#goals-list').innerHTML = goals.map(g => `<div class="goal-item ${g.claimed ? 'claimed' : ''}"><span class="goal-icon ${g.complete ? 'complete' : ''}">${icon(g.complete ? 'check' : g.type === 'date' ? 'heart' : g.type === 'study' ? 'book' : g.type === 'work' ? 'briefcase' : 'chat')}</span><div class="goal-info"><strong>${escape(g.title)}</strong><span>${g.claimed ? '¡Objetivo conseguido!' : `${Math.min(g.progress,g.target)} de ${g.target} · +${money(g.reward)}`}</span>${g.renunciation?`<small class="goal-renunciation">${escape(g.renunciation)}</small>`:''}${g.complete && !g.claimed ? `<button class="text-button" data-claim="${g.id}">Recoger recompensa ${icon('arrow')}</button>` : `<div class="goal-progress"><span style="width:${Math.min(100,g.progress / g.target * 100)}%"></span></div>`}</div></div>`).join('');
     const title = {today:'Mi día',map:'Explorar',people:'Relaciones',family:'Mi familia',character:'Mi personaje',journal:'Diario'}[view];
     $('#breadcrumb-current').textContent = title;
     $$('.nav-item[data-view]').forEach(el => {const active=el.dataset.view===view;el.classList.toggle('active',active);if(active)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});
     main.innerHTML = ({today:renderToday,map:renderMap,people:renderPeople,family:renderFamily,character:renderCharacter,journal:renderJournal}[view])();
+    if(view==='today')main.insertAdjacentHTML('afterbegin',renderPressure());
     hydrateIcons();
     hydrateMeters();
   }
@@ -549,6 +557,7 @@
     if(button.matches('a.brand')) {event.preventDefault();navigate('today');return;}
     if(button.dataset.view) return navigate(button.dataset.view);
     if(button.dataset.aspiration){syncCreatorFields();const id=button.dataset.aspiration;if(creatorDraft.aspirationIds.includes(id)){if(creatorDraft.aspirationIds.length===1)return toast('Conserva al menos una aspiración.',true);creatorDraft.aspirationIds=creatorDraft.aspirationIds.filter(x=>x!==id);}else if(creatorDraft.aspirationIds.length<2)creatorDraft.aspirationIds.push(id);else return toast('Puedes elegir hasta dos aspiraciones.',true);showCreator();return;}
+    if(button.dataset.expenseChoice)return run(game.lifeAction('resolveExpense',{choice:button.dataset.expenseChoice}));
     if(button.dataset.lifeAction)return runLifeAction(button);
     if(button.dataset.memoryIndex!==undefined){run(game.markMemory(Number(button.dataset.memoryIndex)));return;}
     if(button.dataset.exploreFilter){exploreFilter=button.dataset.exploreFilter;render();return;}

@@ -973,7 +973,7 @@
       this.state.hour = 9;
       this.state.location = 'casa';
       this.state.daily = { interactions: {}, actions: {}, workHours: 0, gifts: {} };
-      this._effects({ energy: 100, health: this.state.stats.stress > 80 ? -3 : 1, stress: -22, mood: 5 });
+      this._effects({ energy: 100, health: this.state.stats.stress > 80 ? -3 : 1, stress: this.state.version>=4?-this.data.pressureRules[this.state.direction.settings.difficulty].recovery:-22, mood: 5 });
       // El ánimo, la salud y las habilidades necesitan atención continuada, no una barra permanente.
       this._effects({mood:-4,health:-3,...(this.state.direction?{social:this.state.stats.social>25?-1:0,knowledge:this.state.stats.knowledge>75?-1:this.state.stats.knowledge>30&&this.state.day%7===0?-1:0,charm:this.state.stats.charm>70?-1:this.state.stats.charm>35&&this.state.day%7===0?-1:0,responsibility:this.state.stats.responsibility>75?-1:this.state.stats.responsibility>45&&this.state.day%7===0?-1:0}:{social:-3,knowledge:-1,charm:-1,responsibility:-1})});
       // El paso del tiempo solo desgasta vínculos descuidados; nunca toma decisiones por el jugador.
@@ -1192,7 +1192,7 @@
 
     _validatedState(input) {
       const invalid = () => { throw new Error('Invalid save'); };
-      if (!isObject(input) || ![1, 2, 3].includes(input.version) || !isObject(input.profile)) invalid();
+      if (!isObject(input) || ![1, 2, 3, 4].includes(input.version) || !isObject(input.profile)) invalid();
       const profile = input.profile;
       if (typeof profile.name !== 'string' || !profile.name.trim() || !finite(profile.age) || profile.age < 18 || profile.age > 80 || !PATHS.includes(profile.path)) invalid();
       if (!finite(input.day) || input.day < 1 || input.day > 1000000 || !Number.isInteger(input.day)) invalid();
@@ -1251,7 +1251,7 @@
       };
       this._hydrateV2(state, input.rngState);
       if(input.version>=2)this._validatedV2(input,state,invalid);
-      if(input.version===3&&!root.Vinculos?.LifeSystems)invalid();
+      if(input.version>=3&&!root.Vinculos?.LifeSystems)invalid();
       this._system('hydrate',[state,input]);
       return state;
     }

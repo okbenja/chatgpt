@@ -216,7 +216,7 @@ def full_game(browser, url, through3=False):
     legacy.goto(url)
     legacy.locator('.hero-card').wait_for()
     migrated = legacy.evaluate('(() => {const loaded = new window.LifeGame(); loaded.load(); return loaded.state;})()')
-    check(migrated['version'] == 3, 'old saved game migrates to versioned current schema')
+    check(migrated['version'] == 4, 'old saved game migrates to versioned current schema')
     check(migrated['profile'] == fixture['profile'] and migrated['money'] == fixture['money']
           and migrated['stats'] == fixture['stats'] and migrated['counters'] == fixture['counters'],
           'migration preserves character, money, statistics and progress')
@@ -226,7 +226,7 @@ def full_game(browser, url, through3=False):
     check('narrative' in migrated and 'rngState' in migrated and 'dayStart' in migrated,
           'migration initializes narrative seed and day ledger')
     legacy.locator('[data-action="descanso"]').click()
-    check(state(legacy)['version'] == 3, 'next action persists migrated save in current schema')
+    check(state(legacy)['version'] == 4, 'next action persists migrated save in current schema')
     migration.close()
 
     context = browser.new_context(viewport={'width': 1440, 'height': 1080}, accept_downloads=True)
@@ -259,7 +259,7 @@ def full_game(browser, url, through3=False):
         page.locator('#export-save').click()
     download_info.value.save_as(str(ARTIFACTS / 'exported.json'))
     exported = json.loads((ARTIFACTS / 'exported.json').read_text())
-    check(exported['profile']['name'] == 'Camila' and exported['version'] == 3, 'export downloads current versioned JSON')
+    check(exported['profile']['name'] == 'Camila' and exported['version'] == 4, 'export downloads current versioned JSON')
     before = state(page)
     page.locator('#import-file').set_input_files({'name': 'invalid.json', 'mimeType': 'application/json', 'buffer': b'{"version":1}'})
     page.wait_for_timeout(80)

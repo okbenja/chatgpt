@@ -11,11 +11,12 @@
   function hydrate(g,s,input={}){
     const ids=defs(g).aspirations.map(a=>a.id);
     const requested=input.profile?.aspirationIds || input.aspirations || ['estabilidad'];
-    s.version=3;s.aspirations=[...new Set(requested.filter(id=>ids.includes(id)))].slice(0,2);if(!s.aspirations.length)s.aspirations=['estabilidad'];
+    s.version=4;s.aspirations=[...new Set(requested.filter(id=>ids.includes(id)))].slice(0,2);if(!s.aspirations.length)s.aspirations=['estabilidad'];
     s.direction={progress:{},legacy:{reached:false,day:0,title:'Una vida que es tuya',text:'',snapshots:[]},memories:[],visitedLocations:[s.location],lastChangeDay:0,settings:{difficulty:defs(g).difficulties.some(d=>d.id===input.profile?.difficulty)?input.profile.difficulty:'equilibrada',audioEnabled:false,volume:0.15},tutorial:{enabled:input.version!==1&&input.version!==2,step:0,completed:false}};
     s.life={economy:{savings:0,debt:0,creditLimit:250,lastBilledDay:Math.max(0,s.day-1),transactions:[],weeks:[]},employment:{jobId:s.profile.path==='work'?'nexo':'none',status:s.profile.path==='work'?'employed':'unemployed',performance:60,lastWorkedDay:0,missedShifts:0},skills:Object.fromEntries(defs(g).skills.map(k=>[k.id,{xp:0,lastPracticeDay:0}])),home:{type:'familiar',roommateId:'hermana',upgrades:[],lastMoveDay:0},pet:null,world:{weather:'despejado',news:[],lastUpdatedDay:s.day},annual:{},wellbeing:{nutrition:65,movement:50,rest:75,illness:0},history:[]};
     for(const a of defs(g).aspirations)s.direction.progress[a.id]={stage:0};
-    if(input.version===3){validate(g,input);s.aspirations=clone(input.aspirations);s.direction=clone(input.direction);s.life=clone(input.life);s.life.annual=s.life.annual||{};}
+    if(input.version>=3){validate(g,input);s.aspirations=clone(input.aspirations);s.direction=clone(input.direction);s.life=clone(input.life);s.life.annual=s.life.annual||{};}
+    hydratePressure(g,s,input);
     s.lifeStage=stage(g,s);
     return s;
   }
@@ -46,8 +47,8 @@
   }
   function stage(g,s=g.state){const age=s.profile.age+Math.floor((s.day+360-s.birthDay)/360)-(s.birthDay===1?1:0);return age<25?'juventud':age<50?'adultez':age<65?'madurez':'vejez';}
   function metric(g,name){const s=g.state,l=s.life;return name==='savings'?l.economy.savings:name==='skill'?l.skills.creatividad.xp:name==='friend'?Object.values(s.relationships).filter(r=>r.status==='friend'||r.status==='partner').length:name==='family'?Object.values(s.relationships).filter(r=>r.status==='family').reduce((a,r)=>a+r.trust,0)/Object.values(s.relationships).filter(r=>r.status==='family').length:name==='explore'?s.direction.visitedLocations.length:s.counters.study;}
-  function goals(g){return g.state.aspirations.flatMap(id=>{const a=defs(g).aspirations.find(a=>a.id===id),stage=g.state.direction.progress[id].stage,t=a.stages[stage];if(!t)return [];const value=metric(g,t.metric);return [{...t,id:'asp_'+t.id,aspirationId:id,type:t.metric,progress:Math.min(Math.floor(value*10)/10,t.target),complete:value>=t.target,claimed:false}];});}
-  function claim(g,id){const goal=goals(g).find(x=>x.id===id);if(!goal||!goal.complete)return fail('Todavía queda un poco para ese paso.');g.state.direction.progress[goal.aspirationId].stage++;g._effects({money:goal.reward,mood:3});g._journal('Un rumbo que toma forma',`${goal.title}. Avanzas en tu aspiración de ${goal.aspirationId}.`,'milestone',{tags:['aspiraciones']});return g._success('Has completado un tramo de tu historia.',{kind:'goal'});}
+  function goals(g){return g.state.aspirations.flatMap(id=>{const a=defs(g).aspirations.find(a=>a.id===id),stage=g.state.direction.progress[id].stage,t=a.stages[stage];if(!t)return [];const value=metric(g,t.metric);return [{...t,renunciation:defs(g).aspirationTradeoffs[id].text,id:'asp_'+t.id,aspirationId:id,type:t.metric,progress:Math.min(Math.floor(value*10)/10,t.target),complete:value>=t.target,claimed:false}];});}
+  function claim(g,id){const goal=goals(g).find(x=>x.id===id);if(!goal||!goal.complete)return fail('Todavía queda un poco para ese paso.');const trade=defs(g).aspirationTradeoffs[goal.aspirationId],check=g._timeCheck(trade.duration,trade.energy);if(check)return check;if(g.state.money<(trade.cost||0))return fail('Necesitas reservar el coste indicado antes de cerrar este tramo.');g._advance(trade.duration);g._effects({...trade.stats,energy:-trade.energy,money:-(trade.cost||0)});g.state.direction.progress[goal.aspirationId].stage++;g._effects({money:goal.reward,mood:3});g._journal('Un rumbo que toma forma',`${goal.title}. Avanzas en tu aspiración de ${goal.aspirationId}.`,'milestone',{tags:['aspiraciones']});return g._success('Has completado un tramo de tu historia.',{kind:'goal'});}
   function legacy(g){const s=g.state,done=Object.values(s.direction.progress).reduce((n,p)=>n+p.stage,0);return {...s.direction.legacy,available:s.day>=90||s.day>=30&&done>=3,completedStages:done};}
   function reviewLegacy(g){if(g.state.direction.legacy.reached&&g.state.direction.legacy.day===g.state.day)return {ok:true,message:'Puedes revisar el legado guardado y seguir viviendo.'};if(!legacy(g).available)return fail('Este hito se abre al completar tres tramos y 30 días, o al vivir 90 días.');const s=g.state,close=Object.entries(s.relationships).filter(([,r])=>r.trust>=60&&r.friendship>=40).map(([id])=>g.getNPC(id)?.name).slice(0,5),important=s.narrative.history.filter(h=>h.optionId!=='defer').slice(-3);const text=`${s.profile.name}, has vivido ${s.day} días, cuidando ${s.aspirations.map(id=>defs(g).aspirations.find(a=>a.id===id).label.toLowerCase()).join(' y ')}. ${close.length?'En tu historia están '+close.join(', ')+'.':'Has dejado espacio para conocer a otras personas.'} Completaste ${legacy(g).completedStages} tramos. Guardaste ${s.direction.memories.length} recuerdos. ${important.map(x=>x.text).join(' ')} Este es un cierre posible, no una obligación de dejar de vivir.`;s.direction.legacy={reached:true,day:s.day,title:'Lo que has construido',text,snapshots:[...s.direction.legacy.snapshots,{day:s.day,text}].slice(-20)};g._journal('Lo que has construido',text,'legacy',{tags:['legado']});return g._success('Tu legado queda guardado. Puedes seguir jugando.',{kind:'legacy'});}
   function changeAspirations(g,ids){if(!Array.isArray(ids)||ids.length<1||ids.length>2||new Set(ids).size!==ids.length||ids.some(id=>!defs(g).aspirations.some(a=>a.id===id)))return fail('Elige una o dos aspiraciones distintas.');if([...ids].sort().join() === [...g.state.aspirations].sort().join())return fail('Ese ya es tu rumbo.');if(g.state.direction.lastChangeDay&&g.state.day-g.state.direction.lastChangeDay<7)return fail('Dale una semana de espacio a este cambio antes de volver a elegir.');const check=g._timeCheck(1,8);if(check)return check;g._advance(1);g._effects({energy:-8,mood:-3});g.state.aspirations=[...ids];g.state.direction.lastChangeDay=g.state.day;g._journal('Cambiar de rumbo',`Decides hacer espacio para ${ids.join(' y ')}. Dejar otro proyecto trae dudas y también nuevas posibilidades.`,'life',{tags:['aspiraciones']});return g._success('Cambias de rumbo y te das tiempo para encontrar el ritmo.',{kind:'direction'});}
@@ -55,6 +56,7 @@
   function tutorial(g,action){const t=g.state.direction.tutorial;if(action==='skip'){t.enabled=false;t.completed=true;}else if(action==='restart'){t.enabled=true;t.step=0;t.completed=false;}else if(action==='next'){t.step=Math.min(5,t.step+1);t.completed=t.step===5;t.enabled=!t.completed;}else return fail('Elige cómo continuar la introducción.');g.save();return {ok:true,message:action==='skip'?'Puedes seguir a tu ritmo.':'La introducción se ha actualizado.'};}
   function transaction(g,amount,type){g.state.life.economy.transactions.push({day:g.state.day,amount,type});g.state.life.economy.transactions=g.state.life.economy.transactions.slice(-300);}
   function action(g,type,payload={}){
+    const special=pressureAction(g,type,payload);if(special)return special;
     const s=g.state,l=s.life;let message='',duration=0,energy=0,cost=0,changes={},effect={};const blocked=g._eventBlock();if(blocked)return blocked;
     const amount=Number(payload.amount);
     if(['depositSavings','withdrawSavings','borrowMoney','repayDebt'].includes(type)){
@@ -104,6 +106,7 @@
   }
   function afterAction(g,extra){
     const s=g.state,l=s.life,id=extra.actionId||'';
+    afterPressureAction(g,extra);
     if(extra.kind==='travel'){const weather=defs(g).weathers.find(w=>w.id===l.world.weather),extraEnergy=weather.energyExtra+l.world.news.reduce((n,x)=>n+(defs(g).worldNews.find(z=>z.id===x.id).energyExtra||0),0);if(extraEnergy)g._effects({energy:-extraEnergy});}
     if(extra.kind==='travel'&&!s.direction.visitedLocations.includes(s.location))s.direction.visitedLocations.push(s.location);
     if(extra.kind==='social'){l.skills.comunicacion.xp=cap(l.skills.comunicacion.xp+.4);l.skills.comunicacion.lastPracticeDay=s.day;}
@@ -114,7 +117,7 @@
     const stageNow=stage(g);if(stageNow!==s.lifeStage){g._journal('Otra etapa se abre',`Entras en ${defs(g).lifeStages.find(x=>x.id===stageNow).label.toLowerCase()}. Puedes revisar tus ritmos y prioridades.`,'life',{tags:['etapa']});s.lifeStage=stageNow;}
   }
   function beforeSleep(g){
-    const s=g.state,l=s.life,e=l.economy;let warning='';
+    const s=g.state,l=s.life,e=l.economy;let warning=pressureEvening(g);
     if(s.day-e.lastBilledDay>=7){const h=defs(g).housing.find(x=>x.id===l.home.type),pet=l.pet?defs(g).pets.find(x=>x.id===l.pet.kind).weeklyCost:0,factor=difficulty(g).costFactor,newsFactor=l.world.news.reduce((f,n)=>f*(defs(g).worldNews.find(x=>x.id===n.id).costFactor||1),1);const bills=Math.round((h.weeklyRent+8+12+pet)*factor*newsFactor);let short=Math.max(0,bills-s.money),credit=Math.min(short,250-e.debt);if(credit>0){e.debt+=credit;s.money+=credit;g._recordMutation(`Usas ${credit} € del crédito para cubrir las facturas.`,{kind:'finance'});g._trackBaseline();}const paid=Math.min(s.money,bills);s.money-=paid;const interest=factor===0?0:Math.min(250-e.debt,Math.round(e.debt*.01));e.debt+=interest;g._recordMutation(`Gastos semanales: alquiler ${h.weeklyRent*factor} €, facturas y comida ${20*factor} €, cuidados ${pet*factor} €. Pagas ${paid} €.`,{kind:'finance'});g._trackBaseline();e.weeks.push({day:s.day,income:s.summaries.slice(-7).reduce((n,d)=>n+d.earned,0)+s.ledger.earned,expenses:paid,interest});e.weeks=e.weeks.slice(-160);e.lastBilledDay=s.day;transaction(g,-paid,'bills');if(short>0)warning='Los gastos superaron el dinero disponible. Puedes volver al hogar familiar, aceptar encargos, usar ahorro o solicitar apoyo.';if(paid<bills){l.wellbeing.illness=cap(l.wellbeing.illness+1);warning+=' El barrio te ayuda con lo imprescindible; no se acumulan cargos sin límite.';}g._journal('Balance de la semana',`Pagaste ${paid} € y la deuda queda en ${e.debt.toFixed(2)} €. ${warning}`,'money',{tags:['economía']});}
     if(s.stats.energy<15||s.stats.stress>70)warning+=' El ritmo de hoy deja poco margen de descanso. Puedes reducir planes mañana.';
     if(l.pet&&l.pet.care<35)warning+=` ${l.pet.name} necesita más compañía y cuidados.`;
@@ -122,11 +125,86 @@
     l.lastWarning=warning;
     l.history.push({day:s.day,money:s.money,mood:s.stats.mood,relationships:mean(g),energy:s.stats.energy});l.history=l.history.slice(-1200);
   }
-  function newDay(g){const s=g.state,l=s.life;const recoveryPenalty=Math.round((defs(g).lifeStages.find(x=>x.id===stage(g)).energyFactor-1)*50);if(recoveryPenalty)g._effects({energy:-recoveryPenalty});l.world.weather=defs(g).weathers[Math.floor(g.random()*defs(g).weathers.length)].id;l.world.news=l.world.news.filter(n=>n.endDay>s.day);if(l.world.news.length<2&&g.random()<.12*difficulty(g).riskFactor){const n=defs(g).worldNews[Math.floor(g.random()*defs(g).worldNews.length)];if(!l.world.news.some(x=>x.id===n.id)){l.world.news.push({id:n.id,startDay:s.day,endDay:s.day+n.days});g._journal(n.title,n.text,'world',{tags:['barrio']});}}l.world.lastUpdatedDay=s.day;for(const k of Object.values(l.skills))if(s.day-k.lastPracticeDay>10)k.xp=Math.max(0,k.xp-.08);if(l.pet){l.pet.care=cap(l.pet.care-9);if(l.pet.care>60)g._effects({mood:2});}for(const id of l.home.upgrades)g._effects(defs(g).homeUpgrades.find(x=>x.id===id).effects);if(l.wellbeing.illness>60)g._effects({energy:-8,health:-2});const j=l.employment;if(j.jobId!=='none'&&j.status==='employed'&&s.day-j.lastWorkedDay>7&&!g.isWeekend()){j.performance=cap(j.performance-4*difficulty(g).riskFactor);if(j.performance<15){j.status='unemployed';g._journal('Un trabajo termina','El contrato termina tras varias ausencias. Puedes buscar otro empleo, formarte o aceptar encargos mientras decides.','work',{tags:['trabajo']});}}}
+  function newDay(g){const s=g.state,l=s.life;pressureMorning(g);const recoveryPenalty=Math.round((defs(g).lifeStages.find(x=>x.id===stage(g)).energyFactor-1)*50);if(recoveryPenalty)g._effects({energy:-recoveryPenalty});l.world.weather=defs(g).weathers[Math.floor(g.random()*defs(g).weathers.length)].id;l.world.news=l.world.news.filter(n=>n.endDay>s.day);if(l.world.news.length<2&&g.random()<.12*difficulty(g).riskFactor){const n=defs(g).worldNews[Math.floor(g.random()*defs(g).worldNews.length)];if(!l.world.news.some(x=>x.id===n.id)){l.world.news.push({id:n.id,startDay:s.day,endDay:s.day+n.days});g._journal(n.title,n.text,'world',{tags:['barrio']});}}l.world.lastUpdatedDay=s.day;for(const k of Object.values(l.skills))if(s.day-k.lastPracticeDay>10)k.xp=Math.max(0,k.xp-.08);if(l.pet){l.pet.care=cap(l.pet.care-9);if(l.pet.care>60)g._effects({mood:2});}for(const id of l.home.upgrades)g._effects(defs(g).homeUpgrades.find(x=>x.id===id).effects);if(l.wellbeing.illness>60)g._effects({energy:-8,health:-2});const j=l.employment;if(j.jobId!=='none'&&j.status==='employed'&&s.day-j.lastWorkedDay>7&&!g.isWeekend()){j.performance=cap(j.performance-4*difficulty(g).riskFactor);if(j.performance<15){j.status='unemployed';g._journal('Un trabajo termina','El contrato termina tras varias ausencias. Puedes buscar otro empleo, formarte o aceptar encargos mientras decides.','work',{tags:['trabajo']});}}}
   function availability(g,id,base){if(!base.open||id==='casa')return base;const w=defs(g).weathers.find(w=>w.id===g.state.life.world.weather);const closed=(w.closed||[]).includes(id)||g.state.life.world.news.some(n=>(defs(g).worldNews.find(x=>x.id===n.id).closed||[]).includes(id));return closed?{...base,open:false,reason:'Este lugar está cerrado temporalmente por el clima o las noticias del barrio.'}:base;}
   function applyEffects(g,e){for(const [id,xp] of Object.entries(e.skills||{}))if(g.state.life.skills[id]&&finite(xp)){const k=g.state.life.skills[id];k.xp=cap(k.xp+xp);k.lastPracticeDay=g.state.day;}if(e.performance)g.state.life.employment.performance=cap(g.state.life.employment.performance+e.performance);}
   function get(g,name){const s=g.state,l=s.life;if(name==='travel')return 2+defs(g).weathers.find(w=>w.id===l.world.weather).energyExtra+l.world.news.reduce((n,x)=>n+(defs(g).worldNews.find(z=>z.id===x.id).energyExtra||0),0);if(name==='economy'){const h=defs(g).housing.find(h=>h.id===l.home.type);return {...l.economy,weekly:l.economy.weeks.at(-1)||{income:0,expenses:0,interest:0},upcomingExpenses:Math.round((h.weeklyRent+20+(l.pet?defs(g).pets.find(p=>p.id===l.pet.kind).weeklyCost:0))*difficulty(g).costFactor*l.world.news.reduce((factor,n)=>factor*(defs(g).worldNews.find(x=>x.id===n.id).costFactor||1),1))};}if(name==='employment'){const j=defs(g).jobs.find(j=>j.id===l.employment.jobId);return {...l.employment,title:j?.label||'Entre trabajos',level:s.career.level,salary:j?Math.round(j.basePay*(1+s.career.level*.18)):0,schedule:j?`${j.start}:00–${j.end}:00`:'A tu ritmo',...j};}if(name==='skills')return defs(g).skills.map(k=>({...k,value:l.skills[k.id].xp}));if(name==='home')return {...defs(g).housing.find(h=>h.id===l.home.type),...l.home,housingId:l.home.type};if(name==='pet')return l.pet;if(name==='world')return {...l.world,weather:defs(g).weathers.find(w=>w.id===l.world.weather),news:l.world.news.map(n=>({...defs(g).worldNews.find(x=>x.id===n.id),...n}))};return null;}
   function afterSummary(g,summary){const key=String(summary.year),a=g.state.life.annual[key] || {days:0,earned:0,spent:0,events:0};a.days++;a.earned+=summary.earned;a.spent+=summary.spent;a.events+=g.state.narrative.history.filter(h=>h.day===summary.day).length;g.state.life.annual[key]=a;}
+  // V4: obligaciones que sobreviven al descanso y salidas con un coste visible.
+  function hydratePressure(g,s,input) {
+    const saved=input.version===4?input.life?.pressure:null;
+    if(input.version===4) {
+      if(!saved || !finite(saved.load) || saved.load<0 || saved.load>100 ||
+        !Number.isInteger(saved.nextCrisisDay) || saved.nextCrisisDay<1 ||
+        !Array.isArray(saved.expenses) || saved.expenses.length>3 ||
+        !Array.isArray(saved.history) || saved.history.length>60 ||
+        !Array.isArray(saved.warnings) || saved.warnings.length>20 ||
+        !finite(saved.crises) || saved.crises<0 || !finite(saved.helpCount) || saved.helpCount<0)throw Error('Presión inválida');
+      for(const b of saved.expenses)if(!defs(g).expenseCatalog.some(x=>x.id===b.kind)||!finite(b.amount)||b.amount<0||b.amount>1000||!Number.isInteger(b.day)||b.day<1||b.day>s.day||!Number.isInteger(b.dueDay)||b.dueDay<b.day)throw Error('Gasto inválido');
+      for(const w of saved.warnings)if(typeof w.npcId!=='string'||!s.relationships[w.npcId]||!finite(w.day)||w.day>s.day)throw Error('Aviso inválido');
+      for(const h of saved.history)if(!finite(h.day)||h.day>s.day||typeof h.text!=='string'||h.text.length>500)throw Error('Historial inválido');
+    }
+    s.life.pressure=saved?clone(saved):{load:12,expenses:[],history:[],warnings:[],nextCrisisDay:s.day+20,crises:0,helpCount:0};
+  }
+  function afterPressureAction(g,extra) {
+    const s=g.state,p=s.life.pressure,id=extra.actionId||'';
+    const factor=defs(g).pressureRules[s.direction.settings.difficulty].loadFactor;
+    if(id==='workShift'||/trabajar|turno|encargo/.test(id))p.load=cap(p.load+(s.daily.workHours>4?9:4)*factor);
+    if(id==='practiceSkill'||id==='createWork'||/estudi|clase/.test(id))p.load=cap(p.load+2*factor);
+    if(/descanso|pasear|medita/.test(id))p.load=cap(p.load-3);
+    if(extra.kind==='social'&&extra.npcId) {
+      p.warnings=p.warnings.filter(w=>w.npcId!==extra.npcId);
+      if(g.getRelationship(extra.npcId)?.conflict>20)p.load=cap(p.load+3*factor);
+      else p.load=cap(p.load-1);
+    }
+  }
+  function pressureEvening(g) {
+    const s=g.state,p=s.life.pressure;
+    const conflicts=Object.values(s.relationships).filter(r=>r.conflict>25).length;
+    p.load=cap(p.load*.93+conflicts*.7+(s.life.economy.debt>0?2:0)+p.expenses.length*2+s.family.children.length*.7);
+    if(s.stats.stress>=60)g._effects({mood:-Math.ceil((s.stats.stress-50)/12),health:s.stats.stress>=85?-2:0});
+    return p.expenses.length?'Queda un gasto extraordinario pendiente. Negociar o pedir ayuda también ocupa tiempo y deja una historia. ':'';
+  }
+  function pressureMorning(g) {
+    const s=g.state,p=s.life.pressure,rules=defs(g).pressureRules[s.direction.settings.difficulty];
+    const floor=Math.round(8+p.load*.65+(s.life.economy.debt>0?5:0));
+    if(s.stats.stress<floor)g._effects({stress:floor-s.stats.stress});
+    if(s.stats.stress>55)g._effects({energy:-Math.ceil((s.stats.stress-55)/4),mood:-2});
+    if(s.day>=p.nextCrisisDay&&p.expenses.length<3) {
+      const kind=defs(g).expenseCatalog[Math.floor(g.random()*defs(g).expenseCatalog.length)];
+      const bill={kind:kind.id,amount:Math.round(kind.amount*rules.expenseFactor),day:s.day,dueDay:s.day+7};
+      p.expenses.push(bill);p.crises++;p.load=cap(p.load+10*rules.loadFactor);
+      p.nextCrisisDay=s.day+rules.minDays+Math.floor(g.random()*(rules.maxDays-rules.minDays+1));
+      g._journal(kind.title,`${kind.text} El presupuesto es ${bill.amount} €. Tienes siete días para acordar una salida.`,'pressure',{tags:['economía','decision']});
+    }
+    for(const [id,r] of Object.entries(s.relationships)) {
+      if(r.status==='family'||r.friendship<25||!r.lastMet)continue;
+      const away=s.day-r.lastMet;
+      if(away===4&&!p.warnings.some(w=>w.npcId===id)) {
+        p.warnings.push({npcId:id,day:s.day});
+        g._journal('Un vínculo pide espacio en tu agenda',`${g.getNPC(id).name} echa de menos compartir tiempo. Dentro de unos días puede sentirse la distancia.`,'social',{npcId:id,tags:['aviso']});
+      }
+      if(away>8&&['dating','partner'].includes(r.status)&&s.day%3===0){r.trust=cap(r.trust-1);r.romance=cap(r.romance-1);}
+    }
+    p.warnings=p.warnings.filter(w=>s.day-w.day<30).slice(-20);
+  }
+  function pressureAction(g,type,payload) {
+    if(type!=='resolveExpense')return null;
+    const s=g.state,p=s.life.pressure,b=p.expenses[0];
+    if(!b)return fail('No hay gastos extraordinarios pendientes.');
+    const choice=payload.choice;
+    if(!['pay','help','negotiate'].includes(choice))return fail('Elige pagar, pedir ayuda o negociar.');
+    const blocked=g._eventBlock();if(blocked)return blocked;
+    const cost=choice==='pay'?b.amount:choice==='negotiate'?Math.round(b.amount*.45):0;
+    const hours=choice==='pay'?.5:choice==='negotiate'?2:3,energy=choice==='pay'?2:12;
+    const check=g._timeCheck(hours,energy);if(check)return check;
+    if(s.money<cost)return fail(`Necesitas ${cost} €. Puedes usar ahorro, crédito o pedir ayuda dedicando tres horas.`);
+    s.money-=cost;g._advance(hours);g._effects({energy:-energy,stress:choice==='help'?6:choice==='negotiate'?3:-3,mood:choice==='help'?-2:0});
+    p.load=cap(p.load-(choice==='pay'?8:3));p.expenses.shift();if(choice==='help')p.helpCount++;
+    const text=choice==='pay'?`Pagas ${cost} € y renuncias a otros planes.`:choice==='negotiate'?`Acuerdas ${cost} € y dedicas dos horas a resolver el resto.`:'Aceptas apoyo y dedicas tres horas a colaborar. Queda pendiente devolver ese tiempo a la comunidad.';
+    p.history.push({day:s.day,text});p.history=p.history.slice(-60);transaction(g,-cost,'extraordinary');g._journal('Una salida posible',text,'pressure',{tags:['economía','decision']});
+    return g._success(text,{kind:'system',actionId:type});
+  }
   const api={afterSummary,hydrate,validate,stage,goals,claim,legacy,reviewLegacy,changeAspirations,memories,tutorial,action,afterAction,beforeSleep,newDay,availability,applyEffects,get};
   root.Vinculos=root.Vinculos||{};root.Vinculos.LifeSystems=api;
   if(typeof module!=='undefined'&&module.exports)module.exports=api;
