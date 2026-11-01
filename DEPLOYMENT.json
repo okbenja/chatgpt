@@ -1,0 +1,39 @@
+{
+  "url": "https://okbenja.github.io/chatgpt/",
+  "sourceCommit": "040efbd029392efc8968e830241eb96f61bfd4de",
+  "verifiedAt": "2026-11-01T16:40:00.285766+00:00",
+  "assets": {
+    "index.html": {
+      "status": 200,
+      "sha256": "e8e620ce6e996013cfe082f36f3a44c5c3e6a101e8f5c99430d538de8890c44f"
+    },
+    "data.js": {
+      "status": 200,
+      "sha256": "612cf4d07d1d65baab6a32c15c5d1500e89218a51a2617051b8b5361b1ec2521"
+    },
+    "systems.js": {
+      "status": 200,
+      "sha256": "d309fba05c6114a898f0f99f6d0c660adb033f7d423ddde84a5ff9acb57afe8b"
+    },
+    "engine.js": {
+      "status": 200,
+      "sha256": "9f7aa2cc3d9de21adfa4dd711f5153f33c1b2469f66df0973d3817eb29791009"
+    },
+    "narrative.js": {
+      "status": 200,
+      "sha256": "2c5d327993f6075355e8c0f2bb94ceb0da00dbbeb7c39e43fd04ef7447bfbd3c"
+    },
+    "app.js": {
+      "status": 200,
+      "sha256": "3c3bb34ec73ac5e09d4b62466e64ae4becb7db0dd6d654970f5ebf175d819473"
+    },
+    "styles.css": {
+      "status": 200,
+      "sha256": "00260cafdc79cc120df5fa633178cd5e7467efcb853c4fb45171779ff6929086"
+    },
+    "favicon.svg": {
+      "status": 200,
+      "sha256": "da4a6ba0d8f7194efe89a67b3e957ce2a59616bf43ce4523f49d9aeef2ff10b2"
+    }
+  }
+}
