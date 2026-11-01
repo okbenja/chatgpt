@@ -48,3 +48,5 @@
 - Diario reconstruido sin duplicar resúmenes, avisos de almacenamiento con exportación inmediata y desbloqueo de familia/libro cuando se necesitan.
 - Verificación local final: 99 pruebas Node, 311 comprobaciones Chromium, auditoría AA de seis pantallas y diálogos y carga del guardado de diez años en Chromium. Ensayo completo: 172.800 días, 331/336 eventos, cinco rutas restantes probadas aparte, 120/160 legados y cero repeticiones semanales.
 - La habilitación de Pages y la comprobación remota son independientes de estos resultados locales. El entorno necesita acceso a api.github.com y okbenja.github.io; el borrador de red conserva los presets y añade solo esos dominios.
+
+- Ajuste de CI: Ubuntu24.04 para la versión fijada de Playwright, diagnóstico visible de preparación del navegador y compatibilidad con Pages ya publicado desde una rama. Las comprobaciones siguen siendo obligatorias.

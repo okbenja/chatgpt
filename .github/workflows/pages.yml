@@ -11,7 +11,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -25,9 +25,7 @@ jobs:
       - name: Simulación corta por aspiración
         run: npm run test:sim:smoke
       - name: Preparar Chromium para pruebas
-        run: |
-          python -m pip install playwright==1.56.0
-          python -m playwright install --with-deps chromium
+        run: python scripts/prepare-browser.py
       - name: Escritorio, móvil y HTML sin conexión
         run: npm run test:ui
       - name: Generar entregables desde las fuentes
@@ -44,7 +42,7 @@ jobs:
             /tmp/vinculos-release/SHA256.json
   release:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
@@ -65,7 +63,7 @@ jobs:
           fi
   deploy:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       pages: write
       id-token: write
@@ -73,14 +71,28 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Consultar el modo de publicación existente
+        id: pages-mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          mode=$(gh api "repos/$GH_REPO/pages" --jq .build_type)
+          case "$mode" in legacy|workflow) ;; *) echo 'Modo de Pages desconocido'; exit 1 ;; esac
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
       - name: Leer configuración de Pages
+        if: steps.pages-mode.outputs.mode == 'workflow'
         uses: actions/configure-pages@v5
       - name: Publicar sitio estático
+        if: steps.pages-mode.outputs.mode == 'workflow'
         uses: actions/deploy-pages@v4
         id: deployment
+      - name: Mantener la publicación por rama ya configurada
+        if: steps.pages-mode.outputs.mode == 'legacy'
+        run: echo 'Pages publica desde main; la siguiente tarea verificará los archivos servidos.'
   verify:
     needs: deploy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
     steps:
